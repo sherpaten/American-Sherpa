@@ -1,10 +1,17 @@
-import SEO from '../components/SEO';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+
+import SEO from '../components/SEO';
 
 import restaurantphoto2 from '../assets/restaurantphoto2.webp';
 import restaurentphoto4 from '../assets/restaurentphoto4.webp';
 import outdoor from '../assets/outdoor.webp';
+
+const TOAST_URL =
+  'https://order.toasttab.com/online/riptides-cocktail-and-grill-168-east-montauk-highway';
+
+const MAPS_URL =
+  'https://maps.google.com/?q=168+East+Montauk+Highway,+Lindenhurst,+NY+11757';
 
 export default function Contact() {
   const [result, setResult] = useState('');
@@ -32,13 +39,10 @@ export default function Contact() {
     );
 
     try {
-      const response = await fetch(
-        'https://api.web3forms.com/submit',
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData,
+      });
 
       const data = await response.json();
 
@@ -61,11 +65,8 @@ export default function Contact() {
     }
   };
 
-  const focusClass =
-    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0093b2] focus-visible:ring-offset-2';
-
   return (
-    <main className="bg-white text-black flex flex-col">
+    <main className="bg-[#f7f4ec] text-[#06283d]">
 
       <SEO
         title="Contact RipTides Cocktails & Grill | Lindenhurst, NY"
@@ -75,17 +76,17 @@ export default function Contact() {
       />
 
       {/* =====================================================
-          SECTION 1 — HERO
+          HERO
       ===================================================== */}
       <section
         aria-labelledby="contact-hero-title"
-        className="relative overflow-hidden border-b border-slate-200"
+        className="relative min-h-[620px] overflow-hidden bg-[#06283d]"
       >
         <div className="absolute inset-0">
           <img
             src={restaurantphoto2}
             alt="Dining area at RipTides Cocktails & Grill in Lindenhurst"
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover object-center"
             width="1600"
             height="900"
             fetchPriority="high"
@@ -93,197 +94,221 @@ export default function Contact() {
           />
 
           <div
-            className="absolute inset-0 bg-[#001428]/85"
+            className="absolute inset-0 bg-gradient-to-r from-[#002b45]/95 via-[#06283d]/80 to-[#06283d]/55"
+            aria-hidden="true"
+          />
+
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-[#06283d]/90 via-transparent to-transparent"
             aria-hidden="true"
           />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
+        <div className="site-container relative z-10 flex min-h-[620px] items-center">
+          <div className="max-w-3xl py-24 sm:py-32">
 
-          <p className="text-cyan-300 text-sm font-black uppercase tracking-[0.2em] mb-6">
-            VISIT US
-          </p>
+            <div className="brand-line mb-7">
+              <span className="section-kicker text-[#5ed7e5]">
+                VISIT RIPTIDES
+              </span>
+            </div>
 
-          <h1
-            id="contact-hero-title"
-            className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-tight"
-          >
-            Come See Us
-          </h1>
-
-          <p className="text-xl sm:text-2xl text-white font-bold max-w-2xl mx-auto mt-6">
-            Good food, cold drinks, and good times are waiting in Lindenhurst.
-          </p>
-
-          <p className="text-slate-100 text-lg max-w-3xl mx-auto font-medium leading-relaxed mt-5">
-            Whether you're joining us for dinner, meeting friends at the bar,
-            watching the game, or planning your next celebration, we'd love
-            to see you.
-          </p>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
-
-            <a
-              href="https://maps.google.com/?q=168+East+Montauk+Highway,+Lindenhurst,+NY+11757"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Get directions to RipTides Cocktails & Grill"
-              className={`bg-[#0093b2] hover:bg-[#007a94] text-white font-bold text-base px-8 py-4 rounded-xl shadow-lg transition-transform hover:-translate-y-1 ${focusClass}`}
+            <h1
+              id="contact-hero-title"
+              className="max-w-3xl text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-7xl"
             >
-              GET DIRECTIONS
-            </a>
+              Come See Us.
+            </h1>
 
-            <a
-              href="tel:+16315053200"
-              aria-label="Call RipTides Cocktails & Grill at 631 505 3200"
-              className={`bg-white hover:bg-slate-100 text-[#001428] border border-white font-bold text-base px-8 py-4 rounded-xl shadow-lg transition-transform hover:-translate-y-1 ${focusClass}`}
-            >
-              CALL (631) 505-3200
-            </a>
+            <p className="mt-7 max-w-2xl text-xl font-bold leading-relaxed text-white sm:text-2xl">
+              Good food, cold drinks, and good times are waiting in
+              Lindenhurst.
+            </p>
+
+            <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-slate-200 sm:text-lg">
+              Whether you're joining us for dinner, meeting friends at the
+              bar, watching the game, or planning your next celebration,
+              we'd love to see you.
+            </p>
+
+            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+              <a
+                href={MAPS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary justify-center"
+                aria-label="Get directions to RipTides Cocktails & Grill"
+              >
+                GET DIRECTIONS
+                <span aria-hidden="true">↗</span>
+              </a>
+
+              <a
+                href="tel:+16315053200"
+                className="btn-secondary justify-center !border-white !bg-white !text-[#06283d] hover:!bg-slate-100"
+                aria-label="Call RipTides Cocktails & Grill at 631 505 3200"
+              >
+                CALL (631) 505-3200
+              </a>
+            </div>
 
           </div>
         </div>
       </section>
 
       {/* =====================================================
-          SECTION 2 — LOCATION & HOURS
+          LOCATION + HOURS
       ===================================================== */}
       <section
         aria-labelledby="find-riptides-title"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full"
+        className="section section-white"
       >
-        <div className="text-center mb-12">
+        <div className="site-container">
 
-          <p className="text-[#0093b2] text-xs font-black uppercase tracking-[0.2em]">
-            FIND US
-          </p>
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <p className="section-kicker">
+              FIND US
+            </p>
 
-          <h2
-            id="find-riptides-title"
-            className="text-4xl sm:text-5xl font-black text-black mt-3"
-          >
-            Find RipTides
-          </h2>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 items-stretch">
-
-          {/* ADDRESS */}
-          <article className="bg-slate-50 border border-slate-200 rounded-3xl p-10 shadow-sm flex flex-col justify-center items-center text-center hover:shadow-xl transition-shadow">
-
-            <div
-              className="text-[#0093b2] text-5xl mb-6"
-              aria-hidden="true"
+            <h2
+              id="find-riptides-title"
+              className="section-title mt-3"
             >
-              📍
-            </div>
+              Find RipTides
+            </h2>
 
-            <h3 className="text-2xl font-black text-black mb-4">
-              Address
-            </h3>
+            <p className="section-copy mx-auto mt-5">
+              Come by for dinner, drinks, live entertainment, or simply
+              a good time with friends.
+            </p>
+          </div>
 
-            <address className="not-italic">
-              <p className="text-slate-600 text-lg font-medium mb-1">
-                168 East Montauk Highway
+          <div className="grid gap-7 lg:grid-cols-2">
+
+            {/* ADDRESS */}
+            <article className="card group flex min-h-[360px] flex-col items-center justify-center p-8 text-center sm:p-10">
+
+              <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#e5f7fa] text-3xl shadow-sm transition-transform duration-300 group-hover:-translate-y-1">
+                <span aria-hidden="true">📍</span>
+              </div>
+
+              <p className="section-kicker">
+                OUR LOCATION
               </p>
 
-              <p className="text-slate-600 text-lg font-medium mb-8">
-                Lindenhurst, NY 11757
-              </p>
-            </address>
+              <h3 className="mt-3 text-2xl font-black text-[#06283d]">
+                Visit Us
+              </h3>
 
-            <a
-              href="https://maps.google.com/?q=168+East+Montauk+Highway,+Lindenhurst,+NY+11757"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Get directions to 168 East Montauk Highway"
-              className={`text-[#0093b2] font-bold hover:text-[#001428] transition-colors flex items-center gap-2 ${focusClass}`}
-            >
-              GET DIRECTIONS
-              <span aria-hidden="true">→</span>
-            </a>
+              <address className="mt-5 not-italic">
+                <p className="text-lg font-bold text-[#06283d]">
+                  168 East Montauk Highway
+                </p>
 
-          </article>
+                <p className="mt-1 text-lg font-medium text-slate-600">
+                  Lindenhurst, NY 11757
+                </p>
+              </address>
 
-          {/* HOURS */}
-          <article className="bg-[#001428] text-white rounded-3xl p-10 shadow-md flex flex-col justify-center items-center relative overflow-hidden">
+              <a
+                href={MAPS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-8 inline-flex items-center gap-2 font-black tracking-wide text-[#008fa8] transition-colors hover:text-[#06283d]"
+                aria-label="Get directions to 168 East Montauk Highway"
+              >
+                GET DIRECTIONS
+                <span aria-hidden="true">→</span>
+              </a>
 
-            <div
-              className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-[#0093b2] rounded-full blur-3xl opacity-20"
-              aria-hidden="true"
-            />
+            </article>
 
-            <div
-              className="text-cyan-300 text-5xl mb-6 relative z-10"
-              aria-hidden="true"
-            >
-              🕒
-            </div>
+            {/* HOURS */}
+            <article className="card-dark relative min-h-[360px] overflow-hidden p-8 sm:p-10">
 
-            <h3 className="text-2xl font-black text-white mb-6 relative z-10">
-              Hours of Operation
-            </h3>
+              <div
+                className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#0093b2]/20 blur-3xl"
+                aria-hidden="true"
+              />
 
-            <div className="relative z-10 w-full max-w-xs">
+              <div
+                className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-[#5ed7e5]/10 blur-3xl"
+                aria-hidden="true"
+              />
 
-              <dl className="space-y-4">
+              <div className="relative z-10 flex h-full flex-col items-center justify-center text-center">
 
-                <div className="flex justify-between gap-4 border-b border-slate-700 pb-2">
-                  <dt className="font-bold text-slate-300">
-                    Mon – Thu
-                  </dt>
-
-                  <dd className="font-medium text-white text-right">
-                    12:00 PM – 11:00 PM
-                  </dd>
+                <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-3xl ring-1 ring-white/10">
+                  <span aria-hidden="true">🕒</span>
                 </div>
 
-                <div className="flex justify-between gap-4 border-b border-slate-700 pb-2">
-                  <dt className="font-bold text-slate-300">
-                    Fri – Sat
-                  </dt>
+                <p className="section-kicker !text-[#5ed7e5]">
+                  WHEN TO VISIT
+                </p>
 
-                  <dd className="font-medium text-white text-right">
-                    12:00 PM – 1:00 AM
-                  </dd>
-                </div>
+                <h3 className="mt-3 text-2xl font-black text-white">
+                  Hours of Operation
+                </h3>
 
-                <div className="flex justify-between gap-4">
-                  <dt className="font-bold text-slate-300">
-                    Sunday
-                  </dt>
+                <dl className="mt-8 w-full max-w-md space-y-4 text-left">
 
-                  <dd className="font-medium text-white text-right">
-                    12:00 PM – 10:00 PM
-                  </dd>
-                </div>
+                  <div className="flex items-center justify-between gap-5 border-b border-white/10 pb-4">
+                    <dt className="font-bold text-slate-300">
+                      Mon – Thu
+                    </dt>
 
-              </dl>
+                    <dd className="text-right font-bold text-white">
+                      12:00 PM – 11:00 PM
+                    </dd>
+                  </div>
 
-            </div>
-          </article>
+                  <div className="flex items-center justify-between gap-5 border-b border-white/10 pb-4">
+                    <dt className="font-bold text-slate-300">
+                      Fri – Sat
+                    </dt>
 
+                    <dd className="text-right font-bold text-white">
+                      12:00 PM – 1:00 AM
+                    </dd>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-5">
+                    <dt className="font-bold text-slate-300">
+                      Sunday
+                    </dt>
+
+                    <dd className="text-right font-bold text-white">
+                      12:00 PM – 10:00 PM
+                    </dd>
+                  </div>
+
+                </dl>
+
+              </div>
+            </article>
+
+          </div>
         </div>
       </section>
 
       {/* =====================================================
-          SECTION 3 — CONTACT / IMAGE + FORM
+          CONTACT FORM
       ===================================================== */}
       <section
         aria-labelledby="contact-form-title"
-        className="bg-slate-100 border-y border-slate-200 py-24"
+        className="section section-cream"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="site-container">
 
-          <div className="grid lg:grid-cols-2 gap-12 items-stretch">
+          <div className="grid items-stretch gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
 
-            {/* IMAGE */}
-            <div className="relative rounded-3xl overflow-hidden shadow-xl min-h-[400px]">
+            {/* IMAGE PANEL */}
+            <div className="image-frame relative min-h-[520px] overflow-hidden rounded-[2rem] shadow-2xl lg:min-h-full">
 
               <img
                 src={restaurentphoto4}
                 alt="Bar and restaurant atmosphere at RipTides Cocktails & Grill"
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
                 width="1200"
                 height="900"
                 loading="lazy"
@@ -291,21 +316,25 @@ export default function Contact() {
               />
 
               <div
-                className="absolute inset-0 bg-[#001428]/45"
+                className="absolute inset-0 bg-gradient-to-t from-[#002b45]/95 via-[#06283d]/35 to-transparent"
                 aria-hidden="true"
               />
 
-              <div className="absolute inset-x-0 bottom-0 p-8 sm:p-10 text-white">
+              <div className="absolute inset-x-0 bottom-0 p-8 sm:p-10">
 
-                <p className="inline-block bg-[#0093b2] px-3 py-1.5 rounded-md text-xs font-black uppercase tracking-widest mb-4">
+                <span className="brand-badge">
                   RIPTIDES COCKTAILS & GRILL
-                </p>
+                </span>
 
-                <h2 className="text-3xl sm:text-4xl font-black leading-tight">
-                  Good Food. Cold Drinks. Good Times.
+                <h2 className="mt-5 max-w-lg text-3xl font-black leading-tight text-white sm:text-4xl">
+                  Good Food.
+                  <br />
+                  Cold Drinks.
+                  <br />
+                  Good Times.
                 </h2>
 
-                <p className="mt-4 text-slate-100 font-medium leading-relaxed max-w-lg">
+                <p className="mt-5 max-w-lg text-base font-medium leading-7 text-slate-200">
                   Stop by our Lindenhurst location or reach out to our team.
                   We're happy to help with questions, reservations, events,
                   and celebrations.
@@ -314,30 +343,28 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* CONTACT FORM */}
-            <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-200 text-black">
+            {/* FORM */}
+            <div className="rounded-[2rem] border border-slate-200 bg-white p-7 shadow-xl sm:p-10">
 
-              <div className="mb-8">
-
-                <p className="text-[#0093b2] text-xs font-black uppercase tracking-[0.2em]">
+              <div className="mb-9">
+                <p className="section-kicker">
                   GET IN TOUCH
                 </p>
 
                 <h2
                   id="contact-form-title"
-                  className="text-4xl sm:text-5xl font-black text-black mt-3"
+                  className="section-title mt-3"
                 >
                   Let's Talk
                 </h2>
 
                 <p
                   id="contact-form-description"
-                  className="text-slate-600 font-medium text-base leading-relaxed mt-4"
+                  className="section-copy mt-5"
                 >
                   Have a question about reservations, private parties,
                   menu items, events, or anything else? Send us a message.
                 </p>
-
               </div>
 
               <form
@@ -347,13 +374,12 @@ export default function Contact() {
               >
 
                 {/* NAME + EMAIL */}
-                <div className="grid sm:grid-cols-2 gap-5">
+                <div className="grid gap-5 sm:grid-cols-2">
 
-                  <div className="space-y-1">
-
+                  <div>
                     <label
                       htmlFor="contact-name"
-                      className="block text-xs font-bold text-slate-600 tracking-wider uppercase"
+                      className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
                     >
                       Full Name <span aria-hidden="true">*</span>
                     </label>
@@ -365,16 +391,14 @@ export default function Contact() {
                       required
                       autoComplete="name"
                       placeholder="Jane Doe"
-                      className={`w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-black placeholder:text-slate-500 ${focusClass}`}
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3.5 font-medium text-[#06283d] outline-none transition-all placeholder:text-slate-400 focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
                     />
-
                   </div>
 
-                  <div className="space-y-1">
-
+                  <div>
                     <label
                       htmlFor="contact-email"
-                      className="block text-xs font-bold text-slate-600 tracking-wider uppercase"
+                      className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
                     >
                       Email Address <span aria-hidden="true">*</span>
                     </label>
@@ -387,21 +411,19 @@ export default function Contact() {
                       autoComplete="email"
                       inputMode="email"
                       placeholder="jane@example.com"
-                      className={`w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-black placeholder:text-slate-500 ${focusClass}`}
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3.5 font-medium text-[#06283d] outline-none transition-all placeholder:text-slate-400 focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
                     />
-
                   </div>
 
                 </div>
 
                 {/* PHONE + INQUIRY */}
-                <div className="grid sm:grid-cols-2 gap-5">
+                <div className="grid gap-5 sm:grid-cols-2">
 
-                  <div className="space-y-1">
-
+                  <div>
                     <label
                       htmlFor="contact-phone"
-                      className="block text-xs font-bold text-slate-600 tracking-wider uppercase"
+                      className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
                     >
                       Phone Number
                     </label>
@@ -413,16 +435,14 @@ export default function Contact() {
                       autoComplete="tel"
                       inputMode="tel"
                       placeholder="(631) 505-3200"
-                      className={`w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-black placeholder:text-slate-500 ${focusClass}`}
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3.5 font-medium text-[#06283d] outline-none transition-all placeholder:text-slate-400 focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
                     />
-
                   </div>
 
-                  <div className="space-y-1">
-
+                  <div>
                     <label
                       htmlFor="inquiry-type"
-                      className="block text-xs font-bold text-slate-600 tracking-wider uppercase"
+                      className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
                     >
                       What can we help with?{' '}
                       <span aria-hidden="true">*</span>
@@ -433,51 +453,42 @@ export default function Contact() {
                       id="inquiry-type"
                       required
                       defaultValue=""
-                      className={`w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-black ${focusClass}`}
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3.5 font-medium text-[#06283d] outline-none transition-all focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
                     >
                       <option value="" disabled>
                         Select an option
                       </option>
-
                       <option value="General Question">
                         General Question
                       </option>
-
                       <option value="Reservation">
                         Reservation
                       </option>
-
                       <option value="Private Event">
                         Private Event
                       </option>
-
                       <option value="Catering / Party">
                         Catering / Party
                       </option>
-
                       <option value="Menu Question">
                         Menu Question
                       </option>
-
                       <option value="Event Information">
                         Event Information
                       </option>
-
                       <option value="Other">
                         Other
                       </option>
                     </select>
-
                   </div>
 
                 </div>
 
                 {/* MESSAGE */}
-                <div className="space-y-1">
-
+                <div>
                   <label
                     htmlFor="contact-message"
-                    className="block text-xs font-bold text-slate-600 tracking-wider uppercase"
+                    className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
                   >
                     Message <span aria-hidden="true">*</span>
                   </label>
@@ -486,11 +497,10 @@ export default function Contact() {
                     name="message"
                     id="contact-message"
                     required
-                    rows={4}
+                    rows={6}
                     placeholder="How can we help you?"
-                    className={`w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-black placeholder:text-slate-500 resize-y ${focusClass}`}
+                    className="w-full resize-y rounded-xl border border-slate-300 bg-slate-50 px-4 py-3.5 font-medium text-[#06283d] outline-none transition-all placeholder:text-slate-400 focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
                   />
-
                 </div>
 
                 {/* SPAM PREVENTION */}
@@ -508,9 +518,10 @@ export default function Contact() {
                   type="submit"
                   disabled={isSubmitting}
                   aria-disabled={isSubmitting}
-                  className={`w-full bg-[#001428] hover:bg-[#002a54] disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-lg py-4 rounded-xl shadow-lg transition-transform hover:-translate-y-1 mt-2 ${focusClass}`}
+                  className="btn-primary mt-2 w-full justify-center disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isSubmitting ? 'SENDING...' : 'SEND MESSAGE'}
+                  {!isSubmitting && <span aria-hidden="true">→</span>}
                 </button>
 
                 {/* RESULT */}
@@ -520,12 +531,12 @@ export default function Contact() {
                   aria-atomic="true"
                   className={
                     result
-                      ? `mt-4 p-4 rounded-xl text-center font-bold text-sm ${
+                      ? `rounded-xl border p-4 text-center text-sm font-bold ${
                           result.includes('Success')
-                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            ? 'border-green-200 bg-green-50 text-green-700'
                             : result.includes('Sending')
-                            ? 'bg-slate-50 text-slate-600 border border-slate-200'
-                            : 'bg-red-50 text-red-700 border border-red-200'
+                            ? 'border-slate-200 bg-slate-50 text-slate-600'
+                            : 'border-red-200 bg-red-50 text-red-700'
                         }`
                       : 'sr-only'
                   }
@@ -535,220 +546,197 @@ export default function Contact() {
 
               </form>
             </div>
+
           </div>
         </div>
       </section>
 
       {/* =====================================================
-          SECTION 4 — WHAT BRINGS YOU TO RIPTIDES?
+          WHY VISIT
       ===================================================== */}
       <section
         aria-labelledby="next-visit-title"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full"
+        className="section section-white"
       >
+        <div className="site-container">
 
-        <div className="text-center mb-12">
-
-          <p className="text-[#0093b2] text-xs font-black uppercase tracking-[0.2em]">
-            YOUR NEXT VISIT
-          </p>
-
-          <h2
-            id="next-visit-title"
-            className="text-3xl sm:text-4xl font-black text-black mt-3"
-          >
-            What Brings You to RipTides?
-          </h2>
-
-        </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-
-          {/* DINNER */}
-          <article className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col hover:shadow-xl transition-all hover:-translate-y-1">
-
-            <div
-              className="text-4xl mb-6"
-              aria-hidden="true"
-            >
-              🍽️
-            </div>
-
-            <h3 className="text-xl font-black text-black mb-2">
-              Dinner
-            </h3>
-
-            <p className="text-slate-600 text-sm font-medium mb-8 flex-grow">
-              Come hungry. Leave happy.
+          <div className="mx-auto mb-14 max-w-2xl text-center">
+            <p className="section-kicker">
+              YOUR NEXT VISIT
             </p>
 
-            <Link
-              to="/menu"
-              className={`text-[#0093b2] font-bold text-sm hover:text-[#001428] transition-colors flex items-center gap-2 ${focusClass}`}
+            <h2
+              id="next-visit-title"
+              className="section-title mt-3"
             >
-              VIEW MENU
-              <span aria-hidden="true">→</span>
-            </Link>
+              What Brings You to RipTides?
+            </h2>
 
-          </article>
-
-          {/* DRINKS */}
-          <article className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col hover:shadow-xl transition-all hover:-translate-y-1">
-
-            <div
-              className="text-4xl mb-6"
-              aria-hidden="true"
-            >
-              🍸
-            </div>
-
-            <h3 className="text-xl font-black text-black mb-2">
-              Drinks
-            </h3>
-
-            <p className="text-slate-600 text-sm font-medium mb-8 flex-grow">
-              Cocktails, beer, and good times at the bar.
+            <p className="section-copy mx-auto mt-5">
+              Whatever brings you through the door, we've got something
+              waiting for you.
             </p>
+          </div>
 
-            <Link
-              to="/menu"
-              className={`text-[#0093b2] font-bold text-sm hover:text-[#001428] transition-colors flex items-center gap-2 ${focusClass}`}
-            >
-              SEE DRINK MENU
-              <span aria-hidden="true">→</span>
-            </Link>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
-          </article>
+            {/* DINNER */}
+            <article className="card group flex flex-col p-7 sm:p-8">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e5f7fa] text-2xl transition-transform duration-300 group-hover:-translate-y-1">
+                🍽️
+              </div>
 
-          {/* EVENTS */}
-          <article className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col hover:shadow-xl transition-all hover:-translate-y-1">
+              <h3 className="text-xl font-black text-[#06283d]">
+                Dinner
+              </h3>
 
-            <div
-              className="text-4xl mb-6"
-              aria-hidden="true"
-            >
-              🎸
-            </div>
+              <p className="mt-3 flex-grow text-sm font-medium leading-6 text-slate-600">
+                Come hungry. Leave happy.
+              </p>
 
-            <h3 className="text-xl font-black text-black mb-2">
-              Events
-            </h3>
+              <Link
+                to="/menu"
+                className="mt-7 inline-flex items-center gap-2 text-sm font-black tracking-wide text-[#008fa8] transition-colors hover:text-[#06283d]"
+              >
+                VIEW MENU
+                <span aria-hidden="true">→</span>
+              </Link>
+            </article>
 
-            <p className="text-slate-600 text-sm font-medium mb-8 flex-grow">
-              See what's happening this week.
-            </p>
+            {/* DRINKS */}
+            <article className="card group flex flex-col p-7 sm:p-8">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e5f7fa] text-2xl transition-transform duration-300 group-hover:-translate-y-1">
+                🍸
+              </div>
 
-            <Link
-              to="/events"
-              className={`text-[#0093b2] font-bold text-sm hover:text-[#001428] transition-colors flex items-center gap-2 ${focusClass}`}
-            >
-              VIEW EVENTS
-              <span aria-hidden="true">→</span>
-            </Link>
+              <h3 className="text-xl font-black text-[#06283d]">
+                Drinks
+              </h3>
 
-          </article>
+              <p className="mt-3 flex-grow text-sm font-medium leading-6 text-slate-600">
+                Cocktails, beer, and good times at the bar.
+              </p>
 
-          {/* PRIVATE PARTIES */}
-          <article className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col hover:shadow-xl transition-all hover:-translate-y-1">
+              <Link
+                to="/menu"
+                className="mt-7 inline-flex items-center gap-2 text-sm font-black tracking-wide text-[#008fa8] transition-colors hover:text-[#06283d]"
+              >
+                SEE DRINK MENU
+                <span aria-hidden="true">→</span>
+              </Link>
+            </article>
 
-            <div
-              className="text-4xl mb-6"
-              aria-hidden="true"
-            >
-              🎉
-            </div>
+            {/* EVENTS */}
+            <article className="card group flex flex-col p-7 sm:p-8">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e5f7fa] text-2xl transition-transform duration-300 group-hover:-translate-y-1">
+                🎸
+              </div>
 
-            <h3 className="text-xl font-black text-black mb-2">
-              Private Parties
-            </h3>
+              <h3 className="text-xl font-black text-[#06283d]">
+                Events
+              </h3>
 
-            <p className="text-slate-600 text-sm font-medium mb-8 flex-grow">
-              Planning something special?
-            </p>
+              <p className="mt-3 flex-grow text-sm font-medium leading-6 text-slate-600">
+                See what's happening this week.
+              </p>
 
-            <a
-              href="#inquiry-type"
-              className={`text-[#0093b2] font-bold text-sm hover:text-[#001428] transition-colors flex items-center gap-2 ${focusClass}`}
-            >
-              PLAN YOUR EVENT
-              <span aria-hidden="true">→</span>
-            </a>
+              <Link
+                to="/events"
+                className="mt-7 inline-flex items-center gap-2 text-sm font-black tracking-wide text-[#008fa8] transition-colors hover:text-[#06283d]"
+              >
+                VIEW EVENTS
+                <span aria-hidden="true">→</span>
+              </Link>
+            </article>
 
-          </article>
+            {/* PRIVATE PARTIES */}
+            <article className="card group flex flex-col p-7 sm:p-8">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#fff4d6] text-2xl transition-transform duration-300 group-hover:-translate-y-1">
+                🎉
+              </div>
 
+              <h3 className="text-xl font-black text-[#06283d]">
+                Private Parties
+              </h3>
+
+              <p className="mt-3 flex-grow text-sm font-medium leading-6 text-slate-600">
+                Planning something special?
+              </p>
+
+              <a
+                href="#inquiry-type"
+                className="mt-7 inline-flex items-center gap-2 text-sm font-black tracking-wide text-[#008fa8] transition-colors hover:text-[#06283d]"
+              >
+                PLAN YOUR EVENT
+                <span aria-hidden="true">→</span>
+              </a>
+            </article>
+
+          </div>
         </div>
       </section>
 
       {/* =====================================================
-          SECTION 5 — FINAL CTA
+          ORDER / FINAL CTA
       ===================================================== */}
-      <section
-        aria-labelledby="final-contact-title"
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 w-full"
-      >
+      <section className="section section-navy !pt-0">
+        <div className="site-container">
 
-        <div className="relative overflow-hidden rounded-[2.5rem] shadow-2xl">
+          <div className="relative overflow-hidden rounded-[2rem] bg-[#002b45] shadow-2xl">
 
-          <img
-            src={outdoor}
-            alt="Outdoor seating area at RipTides Cocktails & Grill"
-            className="absolute inset-0 w-full h-full object-cover"
-            width="1600"
-            height="900"
-            loading="lazy"
-            decoding="async"
-          />
+            <div className="absolute -right-24 -top-32 h-80 w-80 rounded-full bg-[#0093b2]/20 blur-3xl" />
+            <div className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-[#5ed7e5]/10 blur-3xl" />
 
-          <div
-            className="absolute inset-0 bg-[#001428]/80"
-            aria-hidden="true"
-          />
+            <div className="relative z-10 grid items-center gap-10 p-8 sm:p-12 lg:grid-cols-[1fr_auto] lg:p-16">
 
-          <div className="relative z-10 p-10 sm:p-16 text-center flex flex-col items-center">
+              <div>
+                <span className="gold-badge">
+                  RIPTIDES COCKTAILS & GRILL
+                </span>
 
-            <p className="bg-[#0093b2] text-white px-3.5 py-1.5 rounded-md text-xs font-black uppercase tracking-widest inline-block shadow-md mb-6">
-              VISIT RIPTIDES
-            </p>
+                <h2 className="mt-5 max-w-3xl text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
+                  See You at RipTides.
+                </h2>
 
-            <h2
-              id="final-contact-title"
-              className="text-4xl sm:text-5xl font-black text-white mb-4"
-            >
-              See You at RipTides
-            </h2>
+                <p className="mt-4 max-w-2xl text-base font-medium leading-7 text-slate-200 sm:text-lg">
+                  Fresh food, cold drinks, live music, and local energy.
+                  Come hang out with us in Lindenhurst.
+                </p>
 
-            <p className="text-cyan-300 font-bold text-lg mb-8 tracking-wide">
-              Fresh food. Cold drinks. Live music. Local energy.
-            </p>
+                <address className="mt-5 not-italic font-bold text-[#5ed7e5]">
+                  168 East Montauk Highway
+                  <br />
+                  Lindenhurst, NY 11757
+                </address>
+              </div>
 
-            <address className="not-italic text-slate-100 font-medium text-lg mb-10">
-              168 East Montauk Highway
-              <br />
-              Lindenhurst, NY 11757
-            </address>
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
 
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 w-full">
+                <a
+                  href={MAPS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-gold justify-center whitespace-nowrap"
+                >
+                  GET DIRECTIONS
+                  <span aria-hidden="true">↗</span>
+                </a>
 
-              <a
-                href="https://maps.google.com/?q=168+East+Montauk+Highway,+Lindenhurst,+NY+11757"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Get directions to RipTides Cocktails & Grill"
-                className={`bg-[#ffb116] hover:bg-[#e59e13] text-black font-black text-base px-8 py-4 rounded-xl shadow-lg transition-transform hover:-translate-y-1 w-full sm:w-auto text-center ${focusClass}`}
-              >
-                GET DIRECTIONS
-              </a>
+                <a
+                  href={TOAST_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary justify-center whitespace-nowrap !border-white/30 !bg-white/10 !text-white hover:!bg-white/20"
+                >
+                  ORDER ONLINE
+                  <span aria-hidden="true">↗</span>
+                </a>
 
-              <Link
-                to="/booking"
-                aria-label="Book a table at RipTides Cocktails & Grill"
-                className={`bg-white/10 hover:bg-white/20 text-white border border-white/40 font-bold text-base px-8 py-4 rounded-xl shadow-lg transition-transform hover:-translate-y-1 w-full sm:w-auto text-center ${focusClass}`}
-              >
-                BOOK A TABLE
-              </Link>
+              </div>
 
             </div>
           </div>
+
         </div>
       </section>
 

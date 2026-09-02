@@ -1,18 +1,23 @@
 import { useEffect, useState } from 'react';
 
-export default function BookingModal({ isOpen, onClose }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    date: '',
-    time: '',
-    guests: '2',
-    requests: '',
-  });
+const INITIAL_FORM_DATA = {
+  name: '',
+  phone: '',
+  date: '',
+  time: '',
+  guests: '2',
+  requests: '',
+};
 
+const RESTAURANT_PHONE = '+16315053200';
+
+export default function BookingModal({ isOpen, onClose }) {
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [submitted, setSubmitted] = useState(false);
 
-  // Close with Escape + prevent background scrolling
+  // ---------------------------------------------------------
+  // CLOSE WITH ESCAPE + LOCK BACKGROUND SCROLL
+  // ---------------------------------------------------------
   useEffect(() => {
     if (!isOpen) return;
 
@@ -23,31 +28,31 @@ export default function BookingModal({ isOpen, onClose }) {
     };
 
     document.addEventListener('keydown', handleKeyDown);
+
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
     };
   }, [isOpen, onClose]);
 
-  // Reset modal state when it closes
+  // ---------------------------------------------------------
+  // RESET WHEN MODAL CLOSES
+  // ---------------------------------------------------------
   useEffect(() => {
     if (!isOpen) {
       setSubmitted(false);
-      setFormData({
-        name: '',
-        phone: '',
-        date: '',
-        time: '',
-        guests: '2',
-        requests: '',
-      });
+      setFormData(INITIAL_FORM_DATA);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
+  // ---------------------------------------------------------
+  // HANDLERS
+  // ---------------------------------------------------------
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -60,398 +65,524 @@ export default function BookingModal({ isOpen, onClose }) {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    // For now this is a reservation REQUEST,
-    // not an automatic confirmed reservation.
+    // This remains a reservation REQUEST.
+    // It is not an automatically confirmed reservation.
     setSubmitted(true);
   };
 
+  // Prevent selecting dates before today.
+  const today = new Date().toISOString().split('T')[0];
+
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="booking-modal-title"
     >
-      {/* Backdrop */}
+      {/* =====================================================
+          BACKDROP
+      ===================================================== */}
       <button
         type="button"
         onClick={onClose}
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-default"
+        className="absolute inset-0 cursor-default bg-[#001421]/75 backdrop-blur-sm"
         aria-label="Close booking window"
       />
 
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white text-slate-900 shadow-2xl">
+      {/* =====================================================
+          MODAL
+      ===================================================== */}
+      <div className="relative z-10 flex max-h-[94vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-white text-[#06283d] shadow-2xl">
 
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#0089a8] to-[#0093b2] px-6 py-6 text-white">
-          <div className="flex items-start justify-between gap-4">
+        {/* ===================================================
+            HEADER
+        =================================================== */}
+        <div className="relative shrink-0 overflow-hidden bg-[#06283d] px-6 py-6 sm:px-8 sm:py-7">
 
-            <div>
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-cyan-100">
-                Reservations
-              </span>
+          {/* Decorative glow */}
+          <div
+            className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#0093b2]/30 blur-3xl"
+            aria-hidden="true"
+          />
+
+          <div
+            className="absolute -bottom-24 left-1/3 h-40 w-40 rounded-full bg-[#5ed7e5]/10 blur-3xl"
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10 flex items-start justify-between gap-5">
+
+            <div className="min-w-0">
+
+              <div className="mb-3 flex items-center gap-2">
+                <span className="h-1 w-8 rounded-full bg-[#5ed7e5]" />
+                <span className="text-xs font-black uppercase tracking-[0.2em] text-[#5ed7e5]">
+                  RESERVATIONS
+                </span>
+              </div>
 
               <h2
                 id="booking-modal-title"
-                className="mt-1 text-2xl sm:text-3xl font-black"
+                className="text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl"
               >
                 Book A Table
               </h2>
 
-              <p className="mt-2 text-sm text-white/90">
+              <p className="mt-2 max-w-md text-sm font-medium leading-6 text-slate-300">
                 Request a table at RipTides Cocktails & Grill.
               </p>
+
             </div>
 
+            {/* Close */}
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-2xl hover:bg-white/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-2xl font-light text-white transition-all hover:bg-white/20 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5ed7e5]"
               aria-label="Close booking window"
             >
-              ×
+              <span aria-hidden="true">×</span>
             </button>
 
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 sm:p-8">
+        {/* ===================================================
+            SCROLLABLE CONTENT
+        =================================================== */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
 
-          {submitted ? (
-            /* =========================
-               SUCCESS STATE
-               ========================= */
-            <div className="text-center py-8">
+          <div className="p-6 sm:p-8">
 
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#0093b2]/10 text-3xl">
-                ✓
-              </div>
+            {submitted ? (
+              /* =================================================
+                 SUCCESS STATE
+              ================================================= */
+              <div className="py-4 text-center sm:py-8">
 
-              <h3 className="mt-5 text-2xl font-black text-[#002B45]">
-                Request Received
-              </h3>
+                {/* Success icon */}
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#e5f7fa] text-4xl text-[#008fa8] ring-8 ring-[#f2fbfc]">
+                  ✓
+                </div>
 
-              <p className="mt-3 text-sm leading-relaxed text-slate-600 max-w-md mx-auto">
-                Thanks, {formData.name}. Your reservation request has been
-                received. Our team will contact you at {formData.phone} to
-                confirm availability.
-              </p>
-
-              <div className="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-left max-w-md mx-auto">
-                <p className="text-xs font-black uppercase tracking-widest text-[#0093b2]">
-                  Requested Reservation
+                <p className="section-kicker mt-7">
+                  REQUEST RECEIVED
                 </p>
 
-                <div className="mt-3 space-y-2 text-sm text-slate-700">
-                  <p>
-                    <strong>Date:</strong> {formData.date}
-                  </p>
+                <h3 className="mt-2 text-3xl font-black tracking-tight text-[#06283d]">
+                  Thanks, {formData.name}!
+                </h3>
 
-                  <p>
-                    <strong>Time:</strong> {formData.time}
-                  </p>
+                <p className="mx-auto mt-4 max-w-md text-sm font-medium leading-7 text-slate-600 sm:text-base">
+                  Your reservation request has been received. Our team will
+                  contact you at{' '}
+                  <strong className="text-[#06283d]">
+                    {formData.phone}
+                  </strong>{' '}
+                  to confirm availability.
+                </p>
 
-                  <p>
-                    <strong>Guests:</strong> {formData.guests}
-                  </p>
+                {/* Reservation summary */}
+                <div className="mx-auto mt-7 max-w-md rounded-2xl border border-slate-200 bg-[#f7f4ec] p-5 text-left sm:p-6">
 
-                  {formData.requests && (
-                    <p>
-                      <strong>Request:</strong> {formData.requests}
-                    </p>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#06283d] text-lg text-white">
+                      📅
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-widest text-[#008fa8]">
+                        REQUESTED RESERVATION
+                      </p>
+
+                      <p className="mt-1 text-sm font-bold text-[#06283d]">
+                        We'll confirm your table by phone.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+
+                    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3 text-sm">
+                      <span className="font-bold text-slate-500">
+                        Date
+                      </span>
+
+                      <span className="text-right font-black text-[#06283d]">
+                        {formData.date}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3 text-sm">
+                      <span className="font-bold text-slate-500">
+                        Time
+                      </span>
+
+                      <span className="text-right font-black text-[#06283d]">
+                        {formData.time}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-3 text-sm">
+                      <span className="font-bold text-slate-500">
+                        Guests
+                      </span>
+
+                      <span className="text-right font-black text-[#06283d]">
+                        {formData.guests}
+                      </span>
+                    </div>
+
+                    {formData.requests && (
+                      <div className="pt-1 text-sm">
+                        <span className="font-bold text-slate-500">
+                          Special request
+                        </span>
+
+                        <p className="mt-1 font-medium leading-6 text-[#06283d]">
+                          {formData.requests}
+                        </p>
+                      </div>
+                    )}
+
+                  </div>
                 </div>
+
+                <div className="mx-auto mt-7 max-w-md">
+                  <p className="text-xs font-medium text-slate-500">
+                    Need an immediate answer?
+                  </p>
+
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
+
+                    <a
+                      href={`tel:${RESTAURANT_PHONE}`}
+                      className="btn-gold justify-center"
+                    >
+                      CALL (631) 505-3200
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="btn-secondary justify-center"
+                    >
+                      CLOSE
+                    </button>
+
+                  </div>
+                </div>
+
               </div>
+            ) : (
+              /* =================================================
+                 RESERVATION FORM
+              ================================================= */
+              <>
+                <div className="mb-7">
 
-              <p className="mt-6 text-xs text-slate-500">
-                Need an immediate answer? Call us directly.
-              </p>
+                  <p className="section-kicker">
+                    REQUEST YOUR TABLE
+                  </p>
 
-              <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+                  <h3 className="mt-2 text-2xl font-black text-[#06283d] sm:text-3xl">
+                    Tell Us When You'd Like to Visit
+                  </h3>
 
-                <a
-                  href="tel:+16315053200"
-                  className="rounded-full bg-[#ffb116] px-6 py-3 font-bold text-black transition-all hover:bg-[#e59e13] hover:scale-[1.02]"
+                  <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-600">
+                    Fill out the form below and our team will contact you
+                    to confirm availability.
+                  </p>
+
+                </div>
+
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-5"
                 >
-                  Call (631) 505-3200
-                </a>
 
+                  {/* =================================================
+                     NAME + PHONE
+                  ================================================= */}
+                  <div className="grid gap-5 sm:grid-cols-2">
+
+                    <div>
+                      <label
+                        htmlFor="booking-name"
+                        className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
+                      >
+                        Full Name <span aria-hidden="true">*</span>
+                      </label>
+
+                      <input
+                        id="booking-name"
+                        name="name"
+                        type="text"
+                        required
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Your name"
+                        autoComplete="name"
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3.5 font-medium text-[#06283d] outline-none transition-all placeholder:text-slate-400 focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="booking-phone"
+                        className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
+                      >
+                        Phone Number <span aria-hidden="true">*</span>
+                      </label>
+
+                      <input
+                        id="booking-phone"
+                        name="phone"
+                        type="tel"
+                        required
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="(631) 555-1234"
+                        autoComplete="tel"
+                        inputMode="tel"
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3.5 font-medium text-[#06283d] outline-none transition-all placeholder:text-slate-400 focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
+                      />
+                    </div>
+
+                  </div>
+
+                  {/* =================================================
+                     DATE + TIME + GUESTS
+                  ================================================= */}
+                  <div className="grid gap-5 sm:grid-cols-3">
+
+                    <div>
+                      <label
+                        htmlFor="booking-date"
+                        className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
+                      >
+                        Date <span aria-hidden="true">*</span>
+                      </label>
+
+                      <input
+                        id="booking-date"
+                        name="date"
+                        type="date"
+                        required
+                        min={today}
+                        value={formData.date}
+                        onChange={handleChange}
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3.5 font-medium text-[#06283d] outline-none transition-all focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="booking-time"
+                        className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
+                      >
+                        Time <span aria-hidden="true">*</span>
+                      </label>
+
+                      <input
+                        id="booking-time"
+                        name="time"
+                        type="time"
+                        required
+                        value={formData.time}
+                        onChange={handleChange}
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3.5 font-medium text-[#06283d] outline-none transition-all focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="booking-guests"
+                        className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
+                      >
+                        Guests <span aria-hidden="true">*</span>
+                      </label>
+
+                      <select
+                        id="booking-guests"
+                        name="guests"
+                        required
+                        value={formData.guests}
+                        onChange={handleChange}
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-3.5 font-medium text-[#06283d] outline-none transition-all focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
+                      >
+                        <option value="1">1 Guest</option>
+                        <option value="2">2 Guests</option>
+                        <option value="3">3 Guests</option>
+                        <option value="4">4 Guests</option>
+                        <option value="5">5 Guests</option>
+                        <option value="6">6 Guests</option>
+                        <option value="7">7 Guests</option>
+                        <option value="8">8 Guests</option>
+                        <option value="9">9 Guests</option>
+                        <option value="10">10 Guests</option>
+                        <option value="11">11 Guests</option>
+                        <option value="12">12 Guests</option>
+                        <option value="13+">13+ Guests</option>
+                      </select>
+                    </div>
+
+                  </div>
+
+                  {/* =================================================
+                     SPECIAL REQUESTS
+                  ================================================= */}
+                  <div>
+                    <label
+                      htmlFor="booking-requests"
+                      className="mb-2 block text-xs font-black uppercase tracking-wider text-slate-600"
+                    >
+                      Special Requests{' '}
+                      <span className="font-medium normal-case tracking-normal text-slate-400">
+                        (Optional)
+                      </span>
+                    </label>
+
+                    <textarea
+                      id="booking-requests"
+                      name="requests"
+                      rows={4}
+                      value={formData.requests}
+                      onChange={handleChange}
+                      placeholder="Birthday, outdoor seating, accessibility needs, etc."
+                      className="w-full resize-none rounded-xl border border-slate-300 bg-slate-50 px-4 py-3.5 font-medium text-[#06283d] outline-none transition-all placeholder:text-slate-400 focus:border-[#0093b2] focus:bg-white focus:ring-2 focus:ring-[#0093b2]/20"
+                    />
+                  </div>
+
+                  {/* =================================================
+                     IMPORTANT NOTICE
+                  ================================================= */}
+                  <div className="rounded-2xl border border-[#0093b2]/20 bg-[#e5f7fa]/60 p-4 sm:p-5">
+
+                    <div className="flex items-start gap-3">
+
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm">
+                        ℹ️
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-black text-[#06283d]">
+                          Reservation request
+                        </p>
+
+                        <p className="mt-1 text-xs font-medium leading-5 text-slate-600 sm:text-sm">
+                          This form sends a{' '}
+                          <strong className="text-[#06283d]">
+                            reservation request
+                          </strong>
+                          . Your table is not confirmed until RipTides
+                          confirms availability with you.
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* =================================================
+                     SUBMIT
+                  ================================================= */}
+                  <button
+                    type="submit"
+                    className="btn-primary w-full justify-center !py-4"
+                  >
+                    REQUEST RESERVATION
+                    <span aria-hidden="true">→</span>
+                  </button>
+
+                </form>
+
+                {/* =================================================
+                   OR CALL
+                ================================================= */}
+                <div className="my-7 flex items-center gap-4">
+                  <div className="h-px flex-1 bg-slate-200" />
+
+                  <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+                    OR
+                  </span>
+
+                  <div className="h-px flex-1 bg-slate-200" />
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-[#f7f4ec] p-5 sm:p-6">
+
+                  <div className="flex items-start gap-4">
+
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#06283d] text-xl text-white">
+                      📞
+                    </div>
+
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-black text-[#06283d]">
+                        Prefer to call?
+                      </h3>
+
+                      <p className="mt-1 text-sm font-medium leading-6 text-slate-600">
+                        For immediate availability or large parties, call
+                        our team directly.
+                      </p>
+
+                      <a
+                        href={`tel:${RESTAURANT_PHONE}`}
+                        className="mt-4 inline-flex items-center rounded-full bg-[#06283d] px-5 py-2.5 text-sm font-black text-white transition-all hover:bg-[#002b45] hover:-translate-y-0.5"
+                      >
+                        (631) 505-3200
+                      </a>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* =================================================
+                   RESTAURANT INFO
+                ================================================= */}
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <p className="text-xs font-black uppercase tracking-widest text-[#008fa8]">
+                      LOCATION
+                    </p>
+
+                    <p className="mt-2 text-sm font-bold leading-6 text-[#06283d]">
+                      168 East Montauk Highway
+                      <br />
+                      Lindenhurst, NY 11757
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <p className="text-xs font-black uppercase tracking-widest text-[#008fa8]">
+                      HOURS
+                    </p>
+
+                    <p className="mt-2 text-sm font-bold leading-6 text-[#06283d]">
+                      Mon: 3:00 PM – 12:00 AM
+                      <br />
+                      Tue – Sun: 2:00 PM – 12:00 AM
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Continue browsing */}
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-full border border-slate-300 px-6 py-3 font-bold text-slate-700 transition-colors hover:bg-slate-100"
+                  className="mt-6 w-full rounded-full border border-slate-300 bg-white px-6 py-3 font-bold text-slate-600 transition-all hover:border-[#06283d] hover:bg-[#f7f4ec] hover:text-[#06283d]"
                 >
-                  Close
+                  CONTINUE BROWSING
                 </button>
 
-              </div>
+              </>
+            )}
 
-            </div>
-          ) : (
-            <>
-              {/* =========================
-                 RESERVATION FORM
-                 ========================= */}
-              <form onSubmit={handleSubmit} className="space-y-5">
-
-                <div className="grid sm:grid-cols-2 gap-4">
-
-                  {/* Name */}
-                  <div>
-                    <label
-                      htmlFor="booking-name"
-                      className="block text-sm font-bold text-slate-700 mb-2"
-                    >
-                      Full Name *
-                    </label>
-
-                    <input
-                      id="booking-name"
-                      name="name"
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Your name"
-                      autoComplete="name"
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:border-[#0093b2] focus:ring-2 focus:ring-[#0093b2]/20"
-                    />
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label
-                      htmlFor="booking-phone"
-                      className="block text-sm font-bold text-slate-700 mb-2"
-                    >
-                      Phone Number *
-                    </label>
-
-                    <input
-                      id="booking-phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="(631) 555-1234"
-                      autoComplete="tel"
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:border-[#0093b2] focus:ring-2 focus:ring-[#0093b2]/20"
-                    />
-                  </div>
-
-                </div>
-
-                <div className="grid sm:grid-cols-3 gap-4">
-
-                  {/* Date */}
-                  <div>
-                    <label
-                      htmlFor="booking-date"
-                      className="block text-sm font-bold text-slate-700 mb-2"
-                    >
-                      Date *
-                    </label>
-
-                    <input
-                      id="booking-date"
-                      name="date"
-                      type="date"
-                      required
-                      value={formData.date}
-                      onChange={handleChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:border-[#0093b2] focus:ring-2 focus:ring-[#0093b2]/20"
-                    />
-                  </div>
-
-                  {/* Time */}
-                  <div>
-                    <label
-                      htmlFor="booking-time"
-                      className="block text-sm font-bold text-slate-700 mb-2"
-                    >
-                      Time *
-                    </label>
-
-                    <input
-                      id="booking-time"
-                      name="time"
-                      type="time"
-                      required
-                      value={formData.time}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:outline-none focus:border-[#0093b2] focus:ring-2 focus:ring-[#0093b2]/20"
-                    />
-                  </div>
-
-                  {/* Guests */}
-                  <div>
-                    <label
-                      htmlFor="booking-guests"
-                      className="block text-sm font-bold text-slate-700 mb-2"
-                    >
-                      Guests *
-                    </label>
-
-                    <select
-                      id="booking-guests"
-                      name="guests"
-                      required
-                      value={formData.guests}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm bg-white focus:outline-none focus:border-[#0093b2] focus:ring-2 focus:ring-[#0093b2]/20"
-                    >
-                      <option value="1">1 Guest</option>
-                      <option value="2">2 Guests</option>
-                      <option value="3">3 Guests</option>
-                      <option value="4">4 Guests</option>
-                      <option value="5">5 Guests</option>
-                      <option value="6">6 Guests</option>
-                      <option value="7">7 Guests</option>
-                      <option value="8">8 Guests</option>
-                      <option value="9">9 Guests</option>
-                      <option value="10">10 Guests</option>
-                      <option value="11">11 Guests</option>
-                      <option value="12">12 Guests</option>
-                      <option value="13+">13+ Guests</option>
-                    </select>
-                  </div>
-
-                </div>
-
-                {/* Special Requests */}
-                <div>
-                  <label
-                    htmlFor="booking-requests"
-                    className="block text-sm font-bold text-slate-700 mb-2"
-                  >
-                    Special Requests
-                    <span className="font-normal text-slate-400">
-                      {' '} (Optional)
-                    </span>
-                  </label>
-
-                  <textarea
-                    id="booking-requests"
-                    name="requests"
-                    rows="3"
-                    value={formData.requests}
-                    onChange={handleChange}
-                    placeholder="Birthday, outdoor seating, accessibility needs, etc."
-                    className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm resize-none focus:outline-none focus:border-[#0093b2] focus:ring-2 focus:ring-[#0093b2]/20"
-                  />
-                </div>
-
-                {/* Notice */}
-                <div className="rounded-2xl border border-[#0093b2]/20 bg-[#0093b2]/5 p-4">
-                  <div className="flex gap-3">
-
-                    <span className="text-xl" aria-hidden="true">
-                      ℹ️
-                    </span>
-
-                    <p className="text-xs sm:text-sm leading-relaxed text-slate-600">
-                      This form sends a <strong>reservation request</strong>.
-                      Your table is not confirmed until RipTides confirms
-                      availability with you.
-                    </p>
-
-                  </div>
-                </div>
-
-                {/* Submit */}
-                <button
-                  type="submit"
-                  className="w-full rounded-full bg-[#0093b2] px-6 py-3.5 font-black text-white shadow-md transition-all hover:bg-[#007a94] hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002B45] focus-visible:ring-offset-2"
-                >
-                  REQUEST RESERVATION
-                </button>
-
-              </form>
-
-              {/* =========================
-                 OR CALL
-                 ========================= */}
-              <div className="my-7 flex items-center gap-4">
-                <div className="h-px flex-1 bg-slate-200" />
-                <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-                  Or
-                </span>
-                <div className="h-px flex-1 bg-slate-200" />
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-
-                <div className="flex gap-4">
-
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#0093b2]/10 text-2xl">
-                    📞
-                  </div>
-
-                  <div>
-                    <h3 className="font-black text-lg">
-                      Prefer to call?
-                    </h3>
-
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                      For immediate availability or large parties, call our
-                      team directly.
-                    </p>
-
-                    <a
-                      href="tel:+16315053200"
-                      className="mt-4 inline-flex items-center justify-center rounded-full bg-[#0093b2] px-6 py-3 font-bold text-white shadow-md transition-all hover:bg-[#007a94] hover:scale-105"
-                    >
-                      (631) 505-3200
-                    </a>
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* Restaurant Information */}
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-[#0093b2]">
-                    Location
-                  </p>
-
-                  <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">
-                    168 East Montauk Highway
-                    <br />
-                    Lindenhurst, NY 11757
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-slate-200 p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-[#0093b2]">
-                    Hours
-                  </p>
-
-                  <p className="mt-2 text-sm font-medium leading-relaxed text-slate-700">
-                    Mon: 3:00 PM – 12:00 AM
-                    <br />
-                    Tue – Sun: 2:00 PM – 12:00 AM
-                  </p>
-                </div>
-
-              </div>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-6 w-full rounded-full border border-slate-300 px-6 py-3 font-bold text-slate-700 transition-colors hover:bg-slate-100"
-              >
-                Continue Browsing
-              </button>
-            </>
-          )}
-
+          </div>
         </div>
       </div>
     </div>

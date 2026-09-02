@@ -1,66 +1,148 @@
 @import "tailwindcss";
 
+/* =========================================================
+   RIPTIDES COCKTAILS & GRILL
+   Global Base Styles
+   ========================================================= */
+
 @layer base {
+  :root {
+    font-family:
+      Inter,
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    background-color: #0b1329;
-    color: #f8fafc;
-    font-family: system-ui, -apple-system, sans-serif;
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
     overflow-x: hidden;
+
+    background: #f7f4ec;
+    color: #06283d;
+
+    font-family: inherit;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  ::selection {
+    background: #5ed7e5;
+    color: #06283d;
   }
 }
 
-@layer components {
-  /* Brand Buttons */
-  .btn-primary {
-    @apply bg-[#0093b2] hover:bg-[#007a93] text-white font-bold px-7 py-3.5 rounded-full transition duration-200 shadow-md inline-flex items-center justify-center gap-2;
-  }
-  
-  .btn-secondary {
-    @apply bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-7 py-3.5 rounded-full transition duration-200 backdrop-blur-sm inline-flex items-center justify-center gap-2;
-  }
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
 
-  /* Card Containers */
-  .brand-card {
-    @apply bg-[#002b5c] border border-blue-900/60 p-8 rounded-3xl shadow-xl transition-all duration-300 hover:border-[#0093b2]/50;
-  }
-
-  /* Section Headings */
-  .section-tag {
-    @apply text-[#0093b2] font-bold uppercase tracking-widest text-xs;
-  }
-
-  .section-title {
-    @apply text-3xl md:text-5xl font-black text-white mt-2 mb-4;
-  }
-}
-/* Accessibility: keyboard users can jump directly to page content. */
 .skip-link {
   position: fixed;
   left: 1rem;
   top: 1rem;
-  z-index: 100;
+  z-index: 9999;
+
   transform: translateY(-200%);
+
   padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  background: #002b5c;
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+  border-radius: 0.75rem;
+
+  background: #06283d;
+  color: #ffffff;
+
+  font-size: 0.875rem;
+  font-weight: 800;
+
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.2);
+
+  transition:
+    transform 200ms ease,
+    background-color 200ms ease;
 }
 
 .skip-link:focus {
   transform: translateY(0);
-  outline: 3px solid #00a6c7;
-  outline-offset: 2px;
+
+  outline: 3px solid #5ed7e5;
+  outline-offset: 3px;
 }
 
+/* =========================================================
+   KEYBOARD FOCUS
+   ========================================================= */
+
+@layer base {
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #5ed7e5;
+    outline-offset: 3px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
-    scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
