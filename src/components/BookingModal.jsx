@@ -15,7 +15,7 @@ const RESTAURANT_PHONE = '+16315053200';
 const INITIAL_AI_MESSAGE = {
   role: 'assistant',
   content:
-    "Hi! I'm the RipTides reservation assistant. I can help you choose a date, time, guest count, and occasion, then automatically submit your reservation request once I have everything I need.",
+    "Hi! I'm the RipTides reservation assistant. I can help you choose a date, time, guest count, and occasion. Once I have everything I need, I'll show you a summary and ask you to confirm before submitting your reservation request.",
 };
 
 export default function BookingModal({ isOpen, onClose }) {
@@ -39,6 +39,14 @@ export default function BookingModal({ isOpen, onClose }) {
 
   const [aiLoading, setAiLoading] = useState(false);
 
+  // NEW:
+  // AI has collected all required information and is waiting
+  // for the customer to explicitly confirm submission.
+  const [
+    awaitingAiConfirmation,
+    setAwaitingAiConfirmation,
+  ] = useState(false);
+
   // ---------------------------------------------------------
   // CLOSE WITH ESCAPE + LOCK BACKGROUND SCROLL
   // ---------------------------------------------------------
@@ -59,9 +67,13 @@ export default function BookingModal({ isOpen, onClose }) {
     document.body.style.overflow = 'hidden';
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener(
+        'keydown',
+        handleKeyDown,
+      );
 
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow =
+        previousOverflow;
     };
   }, [isOpen, onClose]);
 
@@ -84,6 +96,8 @@ export default function BookingModal({ isOpen, onClose }) {
       setSubmitting(false);
 
       setSubmitError('');
+
+      setAwaitingAiConfirmation(false);
 
       setAiMessages([
         INITIAL_AI_MESSAGE,
@@ -124,7 +138,9 @@ export default function BookingModal({ isOpen, onClose }) {
   // SUBMIT RESERVATION TO WEB3FORMS
   // ---------------------------------------------------------
 
-  const submitReservation = async (reservationData) => {
+  const submitReservation = async (
+    reservationData,
+  ) => {
     setSubmitting(true);
 
     setSubmitError('');
@@ -132,7 +148,7 @@ export default function BookingModal({ isOpen, onClose }) {
     const accessKey =
       import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
 
-    if (!accessKey) {
+    if (!accessKey?.trim()) {
       setSubmitError(
         'The reservation form is not configured yet. Please call RipTides directly.',
       );
@@ -155,7 +171,8 @@ export default function BookingModal({ isOpen, onClose }) {
         'No special occasion'
       }`,
       `Special Requests: ${
-        reservationData.requests || 'None'
+        reservationData.requests ||
+        'None'
       }`,
       '',
       'IMPORTANT:',
@@ -174,27 +191,37 @@ export default function BookingModal({ isOpen, onClose }) {
           method: 'POST',
 
           headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
+            'Content-Type':
+              'application/json',
+
+            Accept:
+              'application/json',
           },
 
           body: JSON.stringify({
-            access_key: accessKey,
+            access_key:
+              accessKey.trim(),
 
             subject:
               'New Table Reservation Request from RipTides Website',
 
-            from_name: 'RipTides Website',
+            from_name:
+              'RipTides Website',
 
-            name: reservationData.name,
+            name:
+              reservationData.name,
 
-            phone: reservationData.phone,
+            phone:
+              reservationData.phone,
 
-            date: reservationData.date,
+            date:
+              reservationData.date,
 
-            time: reservationData.time,
+            time:
+              reservationData.time,
 
-            guests: reservationData.guests,
+            guests:
+              reservationData.guests,
 
             occasion:
               reservationData.occasion ||
@@ -209,14 +236,18 @@ export default function BookingModal({ isOpen, onClose }) {
         },
       );
 
-      const result = await response.json();
+      const result =
+        await response.json();
 
       console.log(
         'Web3Forms response:',
         result,
       );
 
-      if (!response.ok || !result.success) {
+      if (
+        !response.ok ||
+        !result.success
+      ) {
         throw new Error(
           result.message ||
             'Unable to send reservation request.',
@@ -227,7 +258,9 @@ export default function BookingModal({ isOpen, onClose }) {
       // SUCCESS
       // -----------------------------------------------------
 
-      setFormData(reservationData);
+      setFormData(
+        reservationData,
+      );
 
       setSubmitted(true);
 
@@ -254,24 +287,39 @@ export default function BookingModal({ isOpen, onClose }) {
   // NORMAL MANUAL RESERVATION SUBMISSION
   // ---------------------------------------------------------
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (
+    event,
+  ) => {
     event.preventDefault();
 
-    await submitReservation(formData);
+    await submitReservation(
+      formData,
+    );
   };
 
   // ---------------------------------------------------------
   // AI RESERVATION ASSISTANT
   // ---------------------------------------------------------
 
-  const handleAiSend = async (event) => {
+  const handleAiSend = async (
+    event,
+  ) => {
     event.preventDefault();
 
-    console.log('================================');
-    console.log('AI SEND CLICKED');
-    console.log('================================');
+    console.log(
+      '================================',
+    );
 
-    const message = aiInput.trim();
+    console.log(
+      'AI SEND CLICKED',
+    );
+
+    console.log(
+      '================================',
+    );
+
+    const message =
+      aiInput.trim();
 
     if (!message) {
       console.log(
@@ -281,7 +329,10 @@ export default function BookingModal({ isOpen, onClose }) {
       return;
     }
 
-    if (aiLoading || submitting) {
+    if (
+      aiLoading ||
+      submitting
+    ) {
       console.log(
         'AI send stopped: request already processing.',
       );
@@ -308,11 +359,153 @@ export default function BookingModal({ isOpen, onClose }) {
 
     try {
       // -----------------------------------------------------
+      // NORMALIZE CUSTOMER RESPONSE
+      // -----------------------------------------------------
+
+      const normalizedMessage =
+        message
+          .toLowerCase()
+          .trim()
+          .replace(
+            /[.!?,]/g,
+            '',
+          )
+          .replace(
+            /\s+/g,
+            ' ',
+          );
+
+      // -----------------------------------------------------
+      // CONFIRMATION RESPONSES
+      // -----------------------------------------------------
+
+      const positiveConfirmationPatterns =
+        [
+          'yes',
+          'yes please',
+          'yep',
+          'yeah',
+          'yup',
+          'sure',
+          'confirm',
+          'confirmed',
+          'book it',
+          'book this',
+          'book that',
+          'submit',
+          'submit it',
+          'go ahead',
+          'go ahead and submit',
+          'go ahead submit',
+          'please submit',
+          'please book it',
+          'that looks good',
+          'looks good',
+          'thats good',
+          'that is good',
+          'correct',
+          'everything is correct',
+          'all correct',
+          'do it',
+          'send it',
+          'send it please',
+        ];
+
+      const isPositiveConfirmation =
+        awaitingAiConfirmation &&
+        positiveConfirmationPatterns.includes(
+          normalizedMessage,
+        );
+
+      // -----------------------------------------------------
+      // EXPLICIT CONFIRMATION
+      // -----------------------------------------------------
+
+      if (
+        isPositiveConfirmation
+      ) {
+        console.log(
+          '================================',
+        );
+
+        console.log(
+          'CUSTOMER CONFIRMED RESERVATION',
+        );
+
+        console.log(
+          'SUBMITTING RESERVATION',
+        );
+
+        console.log(
+          '================================',
+        );
+
+        setAwaitingAiConfirmation(
+          false,
+        );
+
+        setAiMessages((prev) => [
+          ...prev,
+
+          {
+            role: 'assistant',
+
+            content:
+              'Perfect! I’m sending your reservation request now. Your table is not confirmed yet — the RipTides team will review availability and contact you to confirm.',
+          },
+        ]);
+
+        const success =
+          await submitReservation(
+            formData,
+          );
+
+        if (!success) {
+          setAiMessages((prev) => [
+            ...prev,
+
+            {
+              role: 'assistant',
+
+              content:
+                'I could not send the reservation request right now. Please try again or call RipTides at (631) 505-3200.',
+            },
+          ]);
+        }
+
+        return;
+      }
+
+      // -----------------------------------------------------
+      // IF WAITING FOR CONFIRMATION BUT CUSTOMER DID NOT
+      // CLEARLY SAY YES, SEND THEIR MESSAGE TO THE AI.
+      //
+      // This allows:
+      // "change the time to 8"
+      // "make it 5 guests"
+      // "actually September 12"
+      // etc.
+      // -----------------------------------------------------
+
+      if (
+        awaitingAiConfirmation
+      ) {
+        console.log(
+          'Customer did not explicitly confirm. Sending response back to AI for changes.',
+        );
+
+        setAwaitingAiConfirmation(
+          false,
+        );
+      }
+
+      // -----------------------------------------------------
       // AI BACKEND URL
       // -----------------------------------------------------
 
       const aiUrl =
-        import.meta.env.VITE_RESERVATION_AI_URL ||
+        import.meta.env
+          .VITE_RESERVATION_AI_URL ||
         'http://localhost:5000/api/reservation-ai';
 
       console.log(
@@ -345,24 +538,25 @@ export default function BookingModal({ isOpen, onClose }) {
       // SEND TO GEMINI BACKEND
       // -----------------------------------------------------
 
-      const response = await fetch(
-        aiUrl,
-        {
-          method: 'POST',
+      const response =
+        await fetch(
+          aiUrl,
+          {
+            method: 'POST',
 
-          headers: {
-            'Content-Type':
-              'application/json',
+            headers: {
+              'Content-Type':
+                'application/json',
 
-            Accept:
-              'application/json',
+              Accept:
+                'application/json',
+            },
+
+            body: JSON.stringify(
+              requestBody,
+            ),
           },
-
-          body: JSON.stringify(
-            requestBody,
-          ),
-        },
-      );
+        );
 
       console.log(
         'AI HTTP status:',
@@ -381,8 +575,12 @@ export default function BookingModal({ isOpen, onClose }) {
 
       try {
         result =
-          JSON.parse(responseText);
-      } catch (parseError) {
+          JSON.parse(
+            responseText,
+          );
+      } catch (
+        parseError
+      ) {
         console.error(
           'Could not parse AI response:',
           parseError,
@@ -406,7 +604,10 @@ export default function BookingModal({ isOpen, onClose }) {
         );
       }
 
-      if (result.success === false) {
+      if (
+        result.success ===
+        false
+      ) {
         throw new Error(
           result?.message ||
             'The AI backend returned an unsuccessful response.',
@@ -421,7 +622,9 @@ export default function BookingModal({ isOpen, onClose }) {
         ...formData,
       };
 
-      if (result.formData) {
+      if (
+        result.formData
+      ) {
         console.log(
           'AI returned form data:',
           result.formData,
@@ -435,7 +638,8 @@ export default function BookingModal({ isOpen, onClose }) {
               result.formData,
             ).filter(
               ([, value]) =>
-                value !== undefined &&
+                value !==
+                  undefined &&
                 value !== null &&
                 value !== '',
             ),
@@ -451,7 +655,9 @@ export default function BookingModal({ isOpen, onClose }) {
       // SHOW AI RESPONSE
       // -----------------------------------------------------
 
-      if (result.message) {
+      if (
+        result.message
+      ) {
         setAiMessages((prev) => [
           ...prev,
 
@@ -479,7 +685,7 @@ export default function BookingModal({ isOpen, onClose }) {
       );
 
       // -----------------------------------------------------
-      // AUTOMATIC AI SUBMISSION
+      // ASK FOR EXPLICIT CONFIRMATION
       // -----------------------------------------------------
 
       if (complete) {
@@ -492,53 +698,45 @@ export default function BookingModal({ isOpen, onClose }) {
         );
 
         console.log(
-          'AUTOMATICALLY SUBMITTING RESERVATION',
+          'WAITING FOR CUSTOMER CONFIRMATION',
         );
 
         console.log(
           '================================',
         );
 
-        // ---------------------------------------------------
-        // TELL CUSTOMER WHAT IS HAPPENING
-        // ---------------------------------------------------
+        const summary = [
+          'Here’s what I have:',
+          '',
+          `📅 ${updatedFormData.date}`,
+          `🕖 ${updatedFormData.time}`,
+          `👥 ${updatedFormData.guests} guests`,
+          `👤 ${updatedFormData.name}`,
+          `📞 ${updatedFormData.phone}`,
+          `🎉 ${
+            updatedFormData.occasion ||
+            'No special occasion'
+          }`,
+          `📝 ${
+            updatedFormData.requests ||
+            'No special requests'
+          }`,
+          '',
+          'Would you like me to submit this reservation request?',
+        ].join('\n');
 
         setAiMessages((prev) => [
           ...prev,
 
           {
             role: 'assistant',
-
-            content:
-              'Perfect! I have everything I need. I’m submitting your reservation request now. Your table is not confirmed yet — the RipTides team will review availability and contact you to confirm.',
+            content: summary,
           },
         ]);
 
-        // ---------------------------------------------------
-        // SUBMIT AUTOMATICALLY
-        // ---------------------------------------------------
-
-        const success =
-          await submitReservation(
-            updatedFormData,
-          );
-
-        // ---------------------------------------------------
-        // IF SUBMISSION FAILED
-        // ---------------------------------------------------
-
-        if (!success) {
-          setAiMessages((prev) => [
-            ...prev,
-
-            {
-              role: 'assistant',
-
-              content:
-                'I could not send the reservation request right now. Please try again or call RipTides at (631) 505-3200.',
-            },
-          ]);
-        }
+        setAwaitingAiConfirmation(
+          true,
+        );
       }
     } catch (error) {
       console.error(
@@ -637,8 +835,6 @@ export default function BookingModal({ isOpen, onClose }) {
 
         <div className="relative shrink-0 overflow-hidden bg-[#06283d] px-6 py-6 sm:px-8 sm:py-7">
 
-          {/* Decorative glow */}
-
           <div
             className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-[#0093b2]/30 blur-3xl"
             aria-hidden="true"
@@ -676,8 +872,6 @@ export default function BookingModal({ isOpen, onClose }) {
 
             </div>
 
-            {/* Close */}
-
             <button
               type="button"
               onClick={onClose}
@@ -708,8 +902,6 @@ export default function BookingModal({ isOpen, onClose }) {
 
               <div className="py-4 text-center sm:py-8">
 
-                {/* Success icon */}
-
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#e5f7fa] text-4xl text-[#008fa8] ring-8 ring-[#f2fbfc]">
                   ✓
                 </div>
@@ -730,8 +922,6 @@ export default function BookingModal({ isOpen, onClose }) {
                   </strong>{' '}
                   to confirm availability.
                 </p>
-
-                {/* Reservation summary */}
 
                 <div className="mx-auto mt-7 max-w-md rounded-2xl border border-slate-200 bg-[#f7f4ec] p-5 text-left sm:p-6">
 
@@ -828,8 +1018,6 @@ export default function BookingModal({ isOpen, onClose }) {
                   </div>
                 </div>
 
-                {/* Confirmation notice */}
-
                 <div className="mx-auto mt-6 max-w-md rounded-2xl border border-[#0093b2]/20 bg-[#e5f7fa]/70 p-4 text-left">
 
                   <div className="flex items-start gap-3">
@@ -917,7 +1105,8 @@ export default function BookingModal({ isOpen, onClose }) {
                     type="button"
                     onClick={() =>
                       setAiOpen(
-                        (prev) => !prev,
+                        (prev) =>
+                          !prev,
                       )
                     }
                     className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors hover:bg-[#e5f7fa]"
@@ -937,7 +1126,7 @@ export default function BookingModal({ isOpen, onClose }) {
                         </p>
 
                         <p className="mt-0.5 text-xs font-medium text-slate-600">
-                          Ask our AI assistant — it can complete and submit the request for you.
+                          Ask our AI assistant — it can complete the request and ask for your confirmation before submitting.
                         </p>
 
                       </div>
@@ -985,7 +1174,7 @@ export default function BookingModal({ isOpen, onClose }) {
                             >
 
                               <div
-                                className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm font-medium leading-5 ${
+                                className={`max-w-[88%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-sm font-medium leading-5 ${
                                   item.role ===
                                   'user'
                                     ? 'bg-[#06283d] text-white'
@@ -1073,7 +1262,7 @@ export default function BookingModal({ isOpen, onClose }) {
                       </form>
 
                       <p className="mt-2 text-[11px] font-medium leading-4 text-slate-500">
-                        AI can complete and submit your reservation request automatically. Your table is only confirmed after RipTides confirms availability.
+                        AI can complete your reservation request and ask for your confirmation before submitting it. Your table is only confirmed after RipTides confirms availability.
                       </p>
 
                     </div>
