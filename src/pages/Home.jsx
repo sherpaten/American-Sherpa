@@ -104,18 +104,6 @@ export default function Home() {
                 •
               </span>
 
-              <span>
-                Women-Owned
-              </span>
-
-              <span className="hidden text-white/40 sm:inline">
-                •
-              </span>
-
-              <span className="hidden sm:inline">
-                LGBTQ+ Friendly
-              </span>
-
             </div>
 
             {/* Heading */}
