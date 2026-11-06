@@ -13,6 +13,7 @@ const {
 } = require('./src/config/database');
 
 const memberRoutes = require('./src/routes/members');
+const authRoutes = require('./src/routes/auth');
 
 const app = express();
 
@@ -41,6 +42,12 @@ app.use(express.json());
 // ========================================
 
 app.use('/api/members', memberRoutes);
+
+// ========================================
+// ADMIN & STAFF AUTHENTICATION
+// ========================================
+
+app.use('/api/auth', authRoutes);
 
 // ========================================
 // HEALTH CHECK
@@ -130,6 +137,7 @@ async function startServer() {
       console.log(`Health: http://localhost:${PORT}/api/health`);
       console.log(`AI: http://localhost:${PORT}/api/reservation-ai`);
       console.log(`Members: http://localhost:${PORT}/api/members`);
+      console.log(`Auth: http://localhost:${PORT}/api/auth`);
       console.log('MongoDB: Connected');
       console.log('========================================');
       console.log('');
