@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 
 const express = require('express');
@@ -7,10 +8,15 @@ const {
   processReservationMessage,
 } = require('./src/services/reservationAI');
 
+const {
+  connectDatabase,
+} = require('./src/config/database');
+
+const memberRoutes = require('./src/routes/members');
+
 const app = express();
 
 const PORT = process.env.PORT || 5000;
-
 
 // ========================================
 // CORS
@@ -24,13 +30,17 @@ app.use(
   }),
 );
 
-
 // ========================================
 // JSON
 // ========================================
 
 app.use(express.json());
 
+// ========================================
+// MEMBERSHIP ROUTES
+// ========================================
+
+app.use('/api/members', memberRoutes);
 
 // ========================================
 // HEALTH CHECK
@@ -42,7 +52,6 @@ app.get('/api/health', (req, res) => {
     message: 'RipTides AI backend is running.',
   });
 });
-
 
 // ========================================
 // RESERVATION AI
@@ -69,11 +78,10 @@ app.post('/api/reservation-ai', async (req, res) => {
     console.log('Customer:', message);
     console.log('Current form:', formData);
 
-    const result =
-      await processReservationMessage(
-        message,
-        formData,
-      );
+    const result = await processReservationMessage(
+      message,
+      formData,
+    );
 
     console.log('AI response:', result);
 
@@ -84,11 +92,7 @@ app.post('/api/reservation-ai', async (req, res) => {
     });
 
   } catch (error) {
-
-    console.error(
-      'Reservation AI error:',
-      error,
-    );
+    console.error('Reservation AI error:', error);
 
     return res.status(500).json({
       success: false,
@@ -97,7 +101,6 @@ app.post('/api/reservation-ai', async (req, res) => {
     });
   }
 });
-
 
 // ========================================
 // 404
@@ -110,25 +113,32 @@ app.use((req, res) => {
   });
 });
 
-
 // ========================================
 // START SERVER
 // ========================================
 
-app.listen(PORT, () => {
-  console.log('');
-  console.log('========================================');
-  console.log('       RipTides AI Backend');
-  console.log('========================================');
-  console.log(
-    `Server: http://localhost:${PORT}`,
-  );
-  console.log(
-    `Health: http://localhost:${PORT}/api/health`,
-  );
-  console.log(
-    `AI: http://localhost:${PORT}/api/reservation-ai`,
-  );
-  console.log('========================================');
-  console.log('');
-});
+async function startServer() {
+  try {
+    await connectDatabase();
+
+    app.listen(PORT, () => {
+      console.log('');
+      console.log('========================================');
+      console.log('       RipTides AI Backend');
+      console.log('========================================');
+      console.log(`Server: http://localhost:${PORT}`);
+      console.log(`Health: http://localhost:${PORT}/api/health`);
+      console.log(`AI: http://localhost:${PORT}/api/reservation-ai`);
+      console.log(`Members: http://localhost:${PORT}/api/members`);
+      console.log('MongoDB: Connected');
+      console.log('========================================');
+      console.log('');
+    });
+
+  } catch (error) {
+    console.error('Backend startup failed:', error.message);
+    process.exit(1);
+  }
+}
+
+startServer();
