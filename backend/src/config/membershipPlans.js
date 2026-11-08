@@ -5,6 +5,7 @@ const MEMBERSHIP_PLANS = Object.freeze([
     monthlyPrice: 20,
     currency: 'USD',
     billingInterval: 'month',
+    pricingStatus: 'tentative_pending_final_approval',
     description: 'Monthly membership with access to discounted menu pricing.',
     benefitType: 'discounted_menu',
     benefitDetails: {
