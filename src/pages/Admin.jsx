@@ -147,7 +147,7 @@ function MemberDetails({ member, token, user, onClose, onChanged }) {
                 <div><strong>{money(payment.amount, payment.currency)}</strong><span>{payment.method} · {payment.purpose} · {formatDate(payment.recordedAt)}</span></div>
                 <div className="admin-payment-actions"><StatusPill value={payment.status} />
                   {isAdmin && payment.status === 'pending_confirmation' && <button className="admin-small-button" disabled={busy} onClick={() => perform(`/api/members/${member._id}/payments/${payment._id}/confirm`, {}, 'Payment confirmed.')}>Confirm</button>}
-                  {isAdmin && payment.status === 'confirmed' && !payment.appliedAt && member.subscription?.status !== 'active' && <button className="admin-small-button" disabled={busy} onClick={() => perform(`/api/members/${member._id}/activate`, { paymentId: payment._id }, 'Membership activated.')}>Activate</button>}
+                  {isAdmin && payment.status === 'confirmed' && !payment.appliedAt && ['pending_payment', 'expired'].includes(member.subscription?.status) && <button className="admin-small-button" disabled={busy} onClick={() => perform(`/api/members/${member._id}/activate`, { paymentId: payment._id }, 'Membership activated.')}>Activate</button>}
                   {isAdmin && payment.status === 'confirmed' && !payment.appliedAt && member.subscription?.status === 'active' && !member.subscription?.cancellationRequestedAt && <button className="admin-small-button" disabled={busy} onClick={() => perform(`/api/members/${member._id}/renew`, { paymentId: payment._id }, 'Membership renewed.')}>Apply renewal</button>}
                 </div>
               </div>
