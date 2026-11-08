@@ -23,6 +23,39 @@ function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+async function syncMembershipStatuses(members) {
+  const now = new Date();
+
+  await Promise.all([
+    members.updateMany(
+      {
+        'subscription.status': 'active',
+        'subscription.currentPeriodEnd': { $lte: now },
+      },
+      {
+        $set: {
+          status: 'expired',
+          'subscription.status': 'expired',
+          updatedAt: now,
+        },
+      }
+    ),
+    members.updateMany(
+      {
+        'subscription.status': 'cancellation_scheduled',
+        'subscription.cancellationEffectiveAt': { $lte: now },
+      },
+      {
+        $set: {
+          status: 'cancelled',
+          'subscription.status': 'cancelled',
+          updatedAt: now,
+        },
+      }
+    ),
+  ]);
+}
+
 function publicMember(member) {
   if (!member) return null;
 
@@ -193,6 +226,7 @@ router.get(
     try {
       const database = getDatabase();
       const members = database.collection('members');
+      await syncMembershipStatuses(members);
 
       const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
       const limit = Math.min(
@@ -263,7 +297,9 @@ router.get(
   async (req, res) => {
     try {
       const database = getDatabase();
-      const member = await database.collection('members').findOne({
+      const members = database.collection('members');
+      await syncMembershipStatuses(members);
+      const member = await members.findOne({
         membershipId: req.params.membershipId.trim().toUpperCase(),
       });
 
@@ -274,11 +310,18 @@ router.get(
         });
       }
 
+      const now = new Date();
+      const cancellationStillValid =
+        member.subscription?.status === 'cancellation_scheduled' &&
+        member.subscription?.cancellationEffectiveAt &&
+        new Date(member.subscription.cancellationEffectiveAt) > now;
+      const currentPeriodStillValid =
+        member.subscription?.currentPeriodEnd &&
+        new Date(member.subscription.currentPeriodEnd) > now;
       const isActive =
         member.status === 'active' &&
-        member.subscription?.status === 'active' &&
-        member.subscription?.currentPeriodEnd &&
-        new Date(member.subscription.currentPeriodEnd) > new Date();
+        (member.subscription?.status === 'active' || cancellationStillValid) &&
+        currentPeriodStillValid;
 
       return res.json({
         success: true,
@@ -289,6 +332,7 @@ router.get(
           status: isActive ? 'active' : member.status,
           isActive: Boolean(isActive),
           currentPeriodEnd: member.subscription?.currentPeriodEnd || null,
+          cancellationEffectiveAt: member.subscription?.cancellationEffectiveAt || null,
         },
       });
     } catch (error) {
