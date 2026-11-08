@@ -1,6 +1,7 @@
 const dns = require('node:dns');
 
 dns.setServers(['1.1.1.1', '8.8.8.8']);
+
 const { MongoClient } = require('mongodb');
 
 let client;
@@ -19,16 +20,27 @@ async function connectDatabase() {
     await client.connect();
 
     database = client.db('riptides_membership');
+
     const members = database.collection('members');
+    const users = database.collection('users');
 
-await members.createIndex(
-  { membershipId: 1 },
-  { unique: true }
-);
-
-await members.createIndex(
-  { email: 1 }
-);
+    await Promise.all([
+      members.createIndex(
+        { membershipId: 1 },
+        { unique: true }
+      ),
+      members.createIndex(
+        { email: 1 },
+        { unique: true }
+      ),
+      members.createIndex(
+        { status: 1, createdAt: -1 }
+      ),
+      users.createIndex(
+        { email: 1 },
+        { unique: true }
+      ),
+    ]);
 
     await database.command({ ping: 1 });
 
