@@ -7,6 +7,7 @@ import photo2 from '../assets/restaurantphoto2.webp';
 import photo4 from '../assets/restaurentphoto4.webp';
 import outdoor from '../assets/outdoor.webp';
 import HomeGallery from '../components/HomeGallery';
+import MembershipSignup from '../components/MembershipSignup';
 
 export default function Home() {
   const toastUrl =
@@ -336,6 +337,11 @@ export default function Home() {
         </div>
 
       </section>
+
+      {/* =====================================================
+          MEMBERSHIP SIGNUP
+      ====================================================== */}
+      <MembershipSignup />
 
       {/* =====================================================
           ORDERING CTA
