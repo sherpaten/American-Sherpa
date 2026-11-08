@@ -159,6 +159,7 @@ router.post('/register', async (req, res) => {
         monthlyPrice: plan.monthlyPrice,
         currency: plan.currency,
         billingInterval: plan.billingInterval,
+        pricingStatus: plan.pricingStatus,
         benefitType: plan.benefitType,
         benefitDetails: plan.benefitDetails,
       },
@@ -435,7 +436,10 @@ router.post(
         });
       }
 
-      if (!member.plan?.monthlyPrice || member.subscription?.status === 'cancelled') {
+      if (
+        !member.plan?.monthlyPrice ||
+        ['cancelled', 'cancellation_scheduled'].includes(member.subscription?.status)
+      ) {
         return res.status(409).json({
           success: false,
           message: 'This membership cannot accept a payment.',
