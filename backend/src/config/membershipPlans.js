@@ -46,6 +46,7 @@ function getPublicMembershipPlans() {
       monthlyPrice: plan.monthlyPrice,
       currency: plan.currency,
       billingInterval: plan.billingInterval,
+      pricingStatus: plan.pricingStatus,
       description: plan.description,
       benefitType: plan.benefitType,
       benefitDetails: plan.benefitDetails,
