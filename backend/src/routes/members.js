@@ -326,9 +326,9 @@ router.get(
         member.subscription?.currentPeriodEnd &&
         new Date(member.subscription.currentPeriodEnd) > now;
       const isActive =
-        member.status === 'active' &&
+        (member.status === 'active' || cancellationStillValid) &&
         (member.subscription?.status === 'active' || cancellationStillValid) &&
-        currentPeriodStillValid;
+        (currentPeriodStillValid || cancellationStillValid);
 
       return res.json({
         success: true,
