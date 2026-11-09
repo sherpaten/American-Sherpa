@@ -59,9 +59,10 @@ async function syncMembershipStatuses(members) {
 
 function publicMember(member) {
   if (!member) return null;
+  const { accessCodeHash, ...safeMemberRecord } = member;
 
   return {
-    ...member,
+    ...safeMemberRecord,
     _id: member._id.toString(),
     payments: (member.payments || []).map((payment) => ({
       ...payment,
@@ -392,6 +393,41 @@ router.get(
         success: false,
         message: 'Unable to retrieve member details.',
       });
+    }
+  }
+);
+
+
+// ========================================
+// ISSUE / RESET MEMBER ACCESS CODE - ADMIN ONLY
+// ========================================
+
+router.post(
+  '/:memberId/access-code',
+  authenticateToken,
+  requireRole('admin'),
+  async (req, res) => {
+    try {
+      if (!isValidObjectId(req.params.memberId)) {
+        return res.status(400).json({ success: false, message: 'Invalid member ID.' });
+      }
+      const accessCode = crypto.randomBytes(6).toString('hex').toUpperCase();
+      const accessCodeHash = await bcrypt.hash(accessCode, 12);
+      const result = await getDatabase().collection('members').updateOne(
+        { _id: new ObjectId(req.params.memberId) },
+        { $set: { accessCodeHash, accessCodeUpdatedAt: new Date(), updatedAt: new Date() } }
+      );
+      if (result.matchedCount !== 1) {
+        return res.status(404).json({ success: false, message: 'Member not found.' });
+      }
+      return res.json({
+        success: true,
+        message: 'A new one-time access code has been issued. Share it securely with the member.',
+        accessCode,
+      });
+    } catch (error) {
+      console.error('Member access code reset error:', error);
+      return res.status(500).json({ success: false, message: 'Unable to issue a new access code.' });
     }
   }
 );
