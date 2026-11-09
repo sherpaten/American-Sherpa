@@ -1,6 +1,5 @@
 require('dotenv').config();
 
-const readline = require('readline');
 const bcrypt = require('bcryptjs');
 const { connectDatabase, getDatabase } = require('../src/config/database');
 
@@ -9,9 +8,6 @@ const ADMINS = [
   { name: 'Chongba Sherpa', email: 'riptides@americansherpatours.com', title: 'Owner' },
   { name: 'Tenzing Sherpa', email: 'cretostudio115@gmail.com', title: 'General Manager' },
 ];
-
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-function ask(question) { return new Promise((resolve) => rl.question(question, resolve)); }
 
 function askPassword(question) {
   return new Promise((resolve, reject) => {
@@ -62,7 +58,6 @@ async function main() {
     console.error('\nAdmin setup stopped:', error.message);
     process.exitCode = 1;
   } finally {
-    rl.close();
     const dbModule = require('../src/config/database');
     if (typeof dbModule.closeDatabase === 'function') await dbModule.closeDatabase();
   }
