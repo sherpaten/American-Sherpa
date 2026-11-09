@@ -77,7 +77,7 @@ router.post('/access', accessLimiter, async (req, res) => {
   try {
     const membershipId = typeof req.body?.membershipId === 'string' ? req.body.membershipId.trim().toUpperCase() : '';
     const accessCode = typeof req.body?.accessCode === 'string' ? req.body.accessCode.trim().toUpperCase() : '';
-    if (!membershipId || !/^[A-F0-9]{12}$/.test(accessCode)) {
+    if (!membershipId || !/^\d{4}$/.test(accessCode)) {
       return res.status(400).json({ success: false, message: 'Enter your membership reference and 4-digit numeric access code.' });
     }
     const member = await getDatabase().collection('members').findOne({ membershipId });
