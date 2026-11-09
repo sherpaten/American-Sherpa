@@ -186,7 +186,7 @@ router.post('/register', async (req, res) => {
       updatedAt: now,
     };
 
-    const accessCode = crypto.randomBytes(6).toString('hex').toUpperCase();
+    const accessCode = String(crypto.randomInt(0, 10000)).padStart(4, '0');
     member.accessCodeHash = await bcrypt.hash(accessCode, 12);
 
     await members.insertOne(member);
@@ -422,7 +422,7 @@ router.post(
       }
       return res.json({
         success: true,
-        message: 'A new one-time access code has been issued. Share it securely with the member.',
+        message: 'A new 4-digit numeric access code has been issued. Share it securely with the member.',
         accessCode,
       });
     } catch (error) {
