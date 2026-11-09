@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import '../styles/admin.css';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/$/, '');
@@ -132,7 +133,7 @@ function MemberDetails({ member, token, user, onClose, onChanged }) {
   }
 
   const canAcceptPayment = !['cancelled', 'cancellation_scheduled'].includes(member.subscription?.status);
-  return (
+  return createPortal((
     <div className="admin-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="admin-member-modal" role="dialog" aria-modal="true" aria-labelledby="member-dialog-title">
         <div className="admin-modal-head">
@@ -178,7 +179,7 @@ function MemberDetails({ member, token, user, onClose, onChanged }) {
         <p className="admin-permission-note">{isAdmin ? 'Administrator access: payment confirmation, activation, renewal and cancellation.' : 'Staff access: view member records and record cash payments. An administrator must confirm payments.'}</p>
       </section>
     </div>
-  );
+  ), document.body);
 }
 
 function StaffDialog({ token, onClose }) {
@@ -205,7 +206,7 @@ function StaffDialog({ token, onClose }) {
     }
   }
 
-  return (
+  return createPortal((
     <div className="admin-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="admin-staff-modal" role="dialog" aria-modal="true" aria-labelledby="staff-dialog-title">
         <div className="admin-modal-head"><div><p className="admin-eyebrow">TEAM ACCESS</p><h2 id="staff-dialog-title">Add a staff account</h2></div><button className="admin-icon-button" onClick={onClose} aria-label="Close"><Icon name="close" /></button></div>
@@ -219,7 +220,7 @@ function StaffDialog({ token, onClose }) {
         </form>
       </section>
     </div>
-  );
+  ), document.body);
 }
 
 function Dashboard({ token, user, onLogout }) {
