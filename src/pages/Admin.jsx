@@ -151,6 +151,7 @@ function MemberDetails({ member, token, user, onClose, onChanged }) {
           <div><span>Joined</span><strong>{formatDate(member.createdAt)}</strong></div>
           <div><span>Membership ends</span><strong>{formatDate(member.subscription?.currentPeriodEnd || member.expiryDate)}</strong></div>
         </div>
+        {member.subscription?.status === 'cancellation_scheduled' && <div className="admin-success"><strong>Cancellation scheduled</strong><p className="mt-1">Effective: {formatDate(member.subscription?.cancellationEffectiveAt)}</p><p>Requested by: {member.subscription?.cancellationRequestedBy || 'Administrator'}</p>{member.subscription?.cancellationReason && <p>Reason: {member.subscription.cancellationReason}</p>}</div>}
         <div className="admin-section-title"><div><h3>Payment history</h3><p className="admin-muted">Record and confirm payments before activation or renewal.</p></div></div>
         {payments.length ? (
           <div className="admin-payment-list">
