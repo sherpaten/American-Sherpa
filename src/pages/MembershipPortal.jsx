@@ -93,11 +93,11 @@ export default function MembershipPortal() {
         {!member ? (
           <form onSubmit={signIn} className="mt-6 rounded-3xl bg-white p-6 shadow-lg sm:p-8">
             <h2 className="text-xl font-black">Member sign in</h2>
-            <p className="mt-2 text-sm text-slate-600">Use the membership reference and private access code provided when you registered.</p>
+            <p className="mt-2 text-sm text-slate-600">Use the membership reference and 4-digit numeric access code provided when you registered.</p>
             <label className="mt-6 block text-sm font-bold" htmlFor="member-reference">Membership reference</label>
             <input id="member-reference" required value={membershipId} onChange={(e) => setMembershipId(e.target.value.toUpperCase())} placeholder="RT-2026-XXXXXXXX" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3" />
             <label className="mt-4 block text-sm font-bold" htmlFor="member-code">Private access code</label>
-            <input id="member-code" required minLength={12} maxLength={12} autoComplete="one-time-code" value={accessCode} onChange={(e) => setAccessCode(e.target.value.toUpperCase())} placeholder="12-character code" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 tracking-widest" />
+            <input id="member-code" required type="text" inputMode="numeric" pattern="[0-9]{4}" minLength={4} maxLength={4} autoComplete="one-time-code" value={accessCode} onChange={(e) => setAccessCode(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="4-digit code" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 tracking-widest" />
             {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p>}
             <button disabled={busy} className="mt-6 w-full rounded-full bg-[#f4b321] px-6 py-3 font-black text-[#06283d] disabled:opacity-60">{busy ? 'Signing in…' : 'Access my membership'}</button>
             <p className="mt-4 text-xs leading-5 text-slate-500">If you have an older membership without an access code, please contact the RipTides team to have one issued securely.</p>
