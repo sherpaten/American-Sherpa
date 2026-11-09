@@ -101,6 +101,7 @@ function MemberDetails({ member, token, user, onClose, onChanged }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [issuedAccessCode, setIssuedAccessCode] = useState('');
   const isAdmin = user.role === 'admin';
   const payments = member.payments || [];
 
@@ -117,6 +118,17 @@ function MemberDetails({ member, token, user, onClose, onChanged }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function issueAccessCode() {
+    if (!window.confirm('Issue a new member access code? Any previous code will stop working.')) return;
+    setBusy(true); setError(''); setNotice(''); setIssuedAccessCode('');
+    try {
+      const data = await apiRequest('/api/members/' + member._id + '/access-code', { token, method: 'POST', body: JSON.stringify({}) });
+      setIssuedAccessCode(data.accessCode);
+      setNotice(data.message);
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
   }
 
   const canAcceptPayment = !['cancelled', 'cancellation_scheduled'].includes(member.subscription?.status);
@@ -139,6 +151,7 @@ function MemberDetails({ member, token, user, onClose, onChanged }) {
           <div><span>Joined</span><strong>{formatDate(member.createdAt)}</strong></div>
           <div><span>Membership ends</span><strong>{formatDate(member.subscription?.currentPeriodEnd || member.expiryDate)}</strong></div>
         </div>
+        {member.subscription?.status === 'cancellation_scheduled' && <div className="admin-success"><strong>Cancellation scheduled</strong><p className="mt-1">Effective: {formatDate(member.subscription?.cancellationEffectiveAt)}</p><p>Requested by: {member.subscription?.cancellationRequestedBy || 'Administrator'}</p>{member.subscription?.cancellationReason && <p>Reason: {member.subscription.cancellationReason}</p>}</div>}
         <div className="admin-section-title"><div><h3>Payment history</h3><p className="admin-muted">Record and confirm payments before activation or renewal.</p></div></div>
         {payments.length ? (
           <div className="admin-payment-list">
@@ -154,7 +167,9 @@ function MemberDetails({ member, token, user, onClose, onChanged }) {
             ))}
           </div>
         ) : <p className="admin-empty-inline">No payments have been recorded yet.</p>}
+        {issuedAccessCode && <div className="admin-success"><strong>One-time member access code:</strong><p className="mt-2 font-mono text-xl tracking-widest">{issuedAccessCode}</p><button className="admin-small-button mt-2" onClick={() => navigator.clipboard?.writeText(issuedAccessCode)}>Copy code</button><p className="mt-2 text-xs">Share this securely with the member. It will not be shown again.</p></div>}
         <div className="admin-modal-actions">
+          {isAdmin && <button className="admin-secondary-button" disabled={busy} onClick={issueAccessCode}>Issue / reset member access code</button>}
           {canAcceptPayment && <button className="admin-secondary-button" disabled={busy} onClick={() => perform(`/api/members/${member._id}/payments`, { method: 'cash' }, 'Cash payment recorded and awaiting Admin confirmation.')}>Record cash payment</button>}
           {isAdmin && canAcceptPayment && <button className="admin-secondary-button" disabled={busy} onClick={() => perform(`/api/members/${member._id}/payments`, { method: 'online' }, 'Online payment recorded and awaiting Admin confirmation.')}>Record online payment</button>}
           {isAdmin && member.subscription?.status === 'active' && !member.subscription?.cancellationRequestedAt && <button className="admin-danger-button" disabled={busy} onClick={() => { if (window.confirm('Schedule cancellation for this membership?')) perform(`/api/members/${member._id}/cancel`, {}, 'Cancellation has been scheduled.'); }}>Schedule cancellation</button>}
@@ -286,7 +301,7 @@ function Dashboard({ token, user, onLogout }) {
             <article className="admin-stat-card"><span>Expired / cancelled</span><strong>{summary.expired + summary.cancelled}</strong><small>Current page</small></article>
           </div>
           <section className="admin-table-card">
-            <div className="admin-table-heading"><div><h2>Member directory</h2><p className="admin-muted">{pagination.total} records found</p></div><form className="admin-search-form" onSubmit={applySearch}><div className="admin-search-box"><Icon name="search" size={17} /><input aria-label="Search members" placeholder="Search name, email or ID" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} /></div><select aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option><option value="active">Active</option><option value="pending">Pending</option><option value="expired">Expired</option><option value="cancelled">Cancelled</option><option value="suspended">Suspended</option></select><button className="admin-secondary-button" type="submit">Search</button></form></div>
+            <div className="admin-table-heading"><div><h2>Member directory</h2><p className="admin-muted">{pagination.total} records found</p></div><form className="admin-search-form" onSubmit={applySearch}><div className="admin-search-box"><Icon name="search" size={17} /><input aria-label="Search members" placeholder="Search name, email or ID" value={searchInput} onChange={(event) => setSearchInput(event.target.value)} /></div><select aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option><option value="active">Active</option><option value="pending">Pending</option><option value="expired">Expired</option><option value="cancellation_scheduled">Cancellation scheduled</option><option value="cancelled">Cancelled</option><option value="suspended">Suspended</option></select><button className="admin-secondary-button" type="submit">Search</button></form></div>
             {error && <p className="admin-alert admin-table-alert">{error}</p>}
             {loading ? <div className="admin-loading">Loading member records…</div> : members.length ? (
               <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Member</th><th>Membership ID</th><th>Plan</th><th>Status</th><th>Payment</th><th>Joined</th><th /></tr></thead><tbody>

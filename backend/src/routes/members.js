@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const crypto = require('node:crypto');
 const { ObjectId } = require('mongodb');
 
@@ -58,9 +59,10 @@ async function syncMembershipStatuses(members) {
 
 function publicMember(member) {
   if (!member) return null;
+  const { accessCodeHash, ...safeMemberRecord } = member;
 
   return {
-    ...member,
+    ...safeMemberRecord,
     _id: member._id.toString(),
     payments: (member.payments || []).map((payment) => ({
       ...payment,
@@ -184,6 +186,9 @@ router.post('/register', async (req, res) => {
       updatedAt: now,
     };
 
+    const accessCode = String(crypto.randomInt(0, 10000)).padStart(4, '0');
+    member.accessCodeHash = await bcrypt.hash(accessCode, 12);
+
     await members.insertOne(member);
 
     return res.status(201).json({
@@ -196,6 +201,7 @@ router.post('/register', async (req, res) => {
         plan: member.plan,
         status: member.status,
         paymentStatus: member.paymentStatus,
+        accessCode,
       },
     });
   } catch (error) {
@@ -320,9 +326,9 @@ router.get(
         member.subscription?.currentPeriodEnd &&
         new Date(member.subscription.currentPeriodEnd) > now;
       const isActive =
-        member.status === 'active' &&
+        (member.status === 'active' || cancellationStillValid) &&
         (member.subscription?.status === 'active' || cancellationStillValid) &&
-        currentPeriodStillValid;
+        (currentPeriodStillValid || cancellationStillValid);
 
       return res.json({
         success: true,
@@ -387,6 +393,41 @@ router.get(
         success: false,
         message: 'Unable to retrieve member details.',
       });
+    }
+  }
+);
+
+
+// ========================================
+// ISSUE / RESET MEMBER ACCESS CODE - ADMIN ONLY
+// ========================================
+
+router.post(
+  '/:memberId/access-code',
+  authenticateToken,
+  requireRole('admin'),
+  async (req, res) => {
+    try {
+      if (!isValidObjectId(req.params.memberId)) {
+        return res.status(400).json({ success: false, message: 'Invalid member ID.' });
+      }
+      const accessCode = String(crypto.randomInt(0, 10000)).padStart(4, '0');
+      const accessCodeHash = await bcrypt.hash(accessCode, 12);
+      const result = await getDatabase().collection('members').updateOne(
+        { _id: new ObjectId(req.params.memberId) },
+        { $set: { accessCodeHash, accessCodeUpdatedAt: new Date(), updatedAt: new Date() } }
+      );
+      if (result.matchedCount !== 1) {
+        return res.status(404).json({ success: false, message: 'Member not found.' });
+      }
+      return res.json({
+        success: true,
+        message: 'A new 4-digit numeric access code has been issued. Share it securely with the member.',
+        accessCode,
+      });
+    } catch (error) {
+      console.error('Member access code reset error:', error);
+      return res.status(500).json({ success: false, message: 'Unable to issue a new access code.' });
     }
   }
 );
@@ -841,10 +882,13 @@ router.post(
         },
         {
           $set: {
+            status: 'cancellation_scheduled',
             'subscription.status': 'cancellation_scheduled',
             'subscription.cancellationRequestedAt': requestedAt,
             'subscription.cancellationEffectiveAt': effectiveAt,
             'subscription.automaticBillingEnabled': false,
+            'subscription.reminderSuppressedAt': requestedAt,
+            'subscription.cancellationRequestedBy': 'admin',
             updatedAt: requestedAt,
           },
         }

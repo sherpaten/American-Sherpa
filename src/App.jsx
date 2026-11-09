@@ -19,6 +19,7 @@ const Events = lazy(() => import('./pages/Events'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Merchandise = lazy(() => import('./pages/Merchandise'));
 const Admin = lazy(() => import('./pages/Admin'));
+const MembershipPortal = lazy(() => import('./pages/MembershipPortal'));
 
 function PageFallback() {
   return (
@@ -73,6 +74,7 @@ function AppContent() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/merchandise" element={<Merchandise />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/membership-portal" element={<MembershipPortal />} />
           </Routes>
         </Suspense>
       </main>
