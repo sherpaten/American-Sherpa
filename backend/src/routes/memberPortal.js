@@ -133,6 +133,7 @@ router.post('/recover-id/request', recoveryRequestLimiter, async (req, res) => {
       const codeHash = crypto.createHash('sha256').update(code).digest('hex');
       const now = new Date();
       const recovery = getDatabase().collection('membership_id_recovery');
+      await recovery.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
       await recovery.updateOne(
         { email },
         { $set: { email, codeHash, attempts: 0, expiresAt: new Date(now.getTime() + 10 * 60 * 1000), createdAt: now } },
