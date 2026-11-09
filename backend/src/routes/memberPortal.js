@@ -18,7 +18,7 @@ const accessLimiter = rateLimit({
 });
 
 function createMemberToken(member) {
-  return jwt.sign({ type: 'member' }, getJwtSecret(), {
+  return jwt.sign({ type: 'member', accessCodeUpdatedAt: member.accessCodeUpdatedAt?.toISOString() || null }, getJwtSecret(), {
     subject: member._id.toString(),
     expiresIn: '12h',
     issuer: 'riptides-membership-api',
@@ -41,6 +41,10 @@ async function requireMember(req, res, next) {
     }
     const member = await getDatabase().collection('members').findOne({ _id: new ObjectId(payload.sub) });
     if (!member) return res.status(401).json({ success: false, message: 'Membership record not found.' });
+    const currentAccessVersion = member.accessCodeUpdatedAt?.toISOString() || null;
+    if (payload.accessCodeUpdatedAt !== currentAccessVersion) {
+      return res.status(401).json({ success: false, message: 'Your access code was reset. Please sign in with your new code.' });
+    }
     req.member = member;
     next();
   } catch (error) {
