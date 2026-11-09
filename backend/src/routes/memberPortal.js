@@ -121,6 +121,15 @@ router.post('/cancel', requireMember, async (req, res) => {
     }
     try {
       await sendMembershipEmail({
+        to: member.email,
+        subject: 'Your RipTides membership cancellation is scheduled',
+        text: `Hello ${member.fullName},\\n\\nWe received your cancellation request for membership ${member.membershipId}. Your membership benefits remain active until ${effectiveAt.toLocaleDateString()}. No automatic refund will be issued. If you have questions, reply to this email or contact ${DEFAULT_CONTACT_EMAIL}.\\n\\nRipTides Cocktails & Grill`,
+      });
+    } catch (emailError) {
+      console.warn('Member cancellation confirmation email not sent:', emailError.message);
+    }
+    try {
+      await sendMembershipEmail({
         to: DEFAULT_CONTACT_EMAIL,
         subject: `Membership cancellation requested: ${member.membershipId}`,
         text: `A member has requested cancellation.\nName: ${member.fullName}\nReference: ${member.membershipId}\nEmail: ${member.email}\nRequested: ${requestedAt.toISOString()}\nEffective: ${effectiveAt.toISOString()}\nReason: ${reason || 'Not provided'}`,
