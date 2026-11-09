@@ -15,6 +15,7 @@ const {
 const memberRoutes = require('./src/routes/members');
 const authRoutes = require('./src/routes/auth');
 const memberPortalRoutes = require('./src/routes/memberPortal');
+const { startMembershipReminderScheduler } = require('./src/services/membershipReminders');
 
 const app = express();
 
@@ -129,6 +130,7 @@ app.use((req, res) => {
 async function startServer() {
   try {
     await connectDatabase();
+    startMembershipReminderScheduler();
 
     app.listen(PORT, () => {
       console.log('');
