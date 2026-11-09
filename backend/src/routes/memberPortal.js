@@ -11,7 +11,7 @@ const { sendMembershipEmail, DEFAULT_CONTACT_EMAIL } = require('../services/memb
 const router = express.Router();
 const accessLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 8,
+  limit: 5,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: { success: false, message: 'Too many access attempts. Please try again in 15 minutes.' },
@@ -78,7 +78,7 @@ router.post('/access', accessLimiter, async (req, res) => {
     const membershipId = typeof req.body?.membershipId === 'string' ? req.body.membershipId.trim().toUpperCase() : '';
     const accessCode = typeof req.body?.accessCode === 'string' ? req.body.accessCode.trim().toUpperCase() : '';
     if (!membershipId || !/^[A-F0-9]{12}$/.test(accessCode)) {
-      return res.status(400).json({ success: false, message: 'Enter your membership reference and 12-character access code.' });
+      return res.status(400).json({ success: false, message: 'Enter your membership reference and 4-digit numeric access code.' });
     }
     const member = await getDatabase().collection('members').findOne({ membershipId });
     if (!member || !member.accessCodeHash || !(await bcrypt.compare(accessCode, member.accessCodeHash))) {
