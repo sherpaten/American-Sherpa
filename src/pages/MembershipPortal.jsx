@@ -35,6 +35,12 @@ export default function MembershipPortal() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [recoveryStep, setRecoveryStep] = useState('login');
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [recoveredMembershipId, setRecoveredMembershipId] = useState('');
+  const [recoveryError, setRecoveryError] = useState('');
+  const [recoveryNotice, setRecoveryNotice] = useState('');
 
   async function loadMember(currentToken = token) {
     const data = await request('/api/member-portal/me', { token: currentToken });
@@ -65,6 +71,45 @@ export default function MembershipPortal() {
     finally { setBusy(false); }
   }
 
+  async function requestMembershipIdRecovery(event) {
+    event.preventDefault();
+    setBusy(true); setRecoveryError(''); setRecoveryNotice('');
+    try {
+      const data = await request('/api/member-portal/recover-id/request', {
+        method: 'POST',
+        body: JSON.stringify({ email: recoveryEmail }),
+      });
+      setRecoveryNotice(data.message);
+      setRecoveryStep('verify');
+    } catch (err) { setRecoveryError(err.message); }
+    finally { setBusy(false); }
+  }
+
+  async function verifyMembershipIdRecovery(event) {
+    event.preventDefault();
+    setBusy(true); setRecoveryError('');
+    try {
+      const data = await request('/api/member-portal/recover-id/verify', {
+        method: 'POST',
+        body: JSON.stringify({ email: recoveryEmail, code: recoveryCode }),
+      });
+      setRecoveredMembershipId(data.membershipId);
+      setMembershipId(data.membershipId);
+      setRecoveryNotice(data.message);
+      setRecoveryStep('done');
+      setRecoveryCode('');
+    } catch (err) { setRecoveryError(err.message); }
+    finally { setBusy(false); }
+  }
+
+  function resetRecovery() {
+    setRecoveryStep('login');
+    setRecoveryCode('');
+    setRecoveredMembershipId('');
+    setRecoveryError('');
+    setRecoveryNotice('');
+  }
+
   async function cancelMembership() {
     if (!window.confirm('Request cancellation? Your membership benefits remain active until the effective date. No automatic refund is issued.')) return;
     setBusy(true); setError(''); setNotice('');
@@ -91,17 +136,52 @@ export default function MembershipPortal() {
           <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">View your membership status, payment information and cancellation date.</p>
         </div>
         {!member ? (
-          <form onSubmit={signIn} className="mt-6 rounded-3xl bg-white p-6 shadow-lg sm:p-8">
+          <div className="mt-6 rounded-3xl bg-white p-6 shadow-lg sm:p-8">
             <h2 className="text-xl font-black">Member sign in</h2>
             <p className="mt-2 text-sm text-slate-600">Use the membership reference and 4-digit numeric access code provided when you registered.</p>
+            <form onSubmit={signIn}>
             <label className="mt-6 block text-sm font-bold" htmlFor="member-reference">Membership reference</label>
             <input id="member-reference" required value={membershipId} onChange={(e) => setMembershipId(e.target.value.toUpperCase())} placeholder="RT-2026-XXXXXXXX" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3" />
             <label className="mt-4 block text-sm font-bold" htmlFor="member-code">Private access code</label>
             <input id="member-code" required type="text" inputMode="numeric" pattern="[0-9]{4}" minLength={4} maxLength={4} autoComplete="one-time-code" value={accessCode} onChange={(e) => setAccessCode(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="4-digit code" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 tracking-widest" />
             {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p>}
             <button disabled={busy} className="mt-6 w-full rounded-full bg-[#f4b321] px-6 py-3 font-black text-[#06283d] disabled:opacity-60">{busy ? 'Signing in…' : 'Access my membership'}</button>
+            </form>
             <p className="mt-4 text-xs leading-5 text-slate-500">If you have an older membership without an access code, please contact the RipTides team to have one issued securely.</p>
-          </form>
+            {recoveryStep === 'login' && <button type="button" onClick={() => { setRecoveryStep('request'); setRecoveryError(''); setRecoveryNotice(''); }} className="mt-4 text-sm font-bold text-[#007d91] underline">Forgot Membership ID?</button>}
+            {recoveryStep === 'request' && (
+              <form onSubmit={requestMembershipIdRecovery} className="mt-6 border-t border-slate-100 pt-5">
+                <h3 className="font-black">Recover your Membership ID</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Enter the email address registered to your membership. We'll send a one-time verification code if it matches a member record.</p>
+                <label className="mt-4 block text-sm font-bold" htmlFor="recovery-email">Registered email address</label>
+                <input id="recovery-email" type="email" required maxLength={254} autoComplete="email" value={recoveryEmail} onChange={(e) => setRecoveryEmail(e.target.value)} placeholder="you@example.com" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                {recoveryError && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{recoveryError}</p>}
+                <button disabled={busy} className="mt-4 w-full rounded-full bg-[#06283d] px-6 py-3 font-black text-white disabled:opacity-60">{busy ? 'Sending…' : 'Send verification code'}</button>
+                <button type="button" onClick={resetRecovery} className="mt-3 text-sm font-bold text-slate-500 underline">Back to sign in</button>
+              </form>
+            )}
+            {recoveryStep === 'verify' && (
+              <form onSubmit={verifyMembershipIdRecovery} className="mt-6 border-t border-slate-100 pt-5">
+                <h3 className="font-black">Verify your email</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{recoveryNotice} Check your inbox for a 6-digit code. It expires in 10 minutes.</p>
+                <label className="mt-4 block text-sm font-bold" htmlFor="recovery-code">Email verification code</label>
+                <input id="recovery-code" required type="text" inputMode="numeric" pattern="[0-9]{6}" minLength={6} maxLength={6} autoComplete="one-time-code" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit code" className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 tracking-widest" />
+                {recoveryError && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{recoveryError}</p>}
+                <button disabled={busy} className="mt-4 w-full rounded-full bg-[#f4b321] px-6 py-3 font-black text-[#06283d] disabled:opacity-60">{busy ? 'Verifying…' : 'Verify and show Membership ID'}</button>
+                <button type="button" onClick={() => { setRecoveryStep('request'); setRecoveryCode(''); setRecoveryError(''); setRecoveryNotice(''); }} className="mt-3 text-sm font-bold text-slate-500 underline">Use a different email / request a new code</button>
+              </form>
+            )}
+            {recoveryStep === 'done' && (
+              <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5" role="status">
+                <h3 className="font-black text-emerald-900">Email verified</h3>
+                <p className="mt-2 text-sm text-emerald-800">{recoveryNotice}</p>
+                <p className="mt-3 text-xs font-bold uppercase tracking-wider text-emerald-800">Your existing Membership ID</p>
+                <p className="mt-1 break-all text-xl font-black text-[#06283d]">{recoveredMembershipId}</p>
+                <p className="mt-2 text-sm text-emerald-800">Your 4-digit access code has not changed. Use it with this Membership ID to sign in.</p>
+                <button type="button" onClick={resetRecovery} className="mt-4 rounded-full bg-[#06283d] px-5 py-2.5 text-sm font-black text-white">Return to sign in</button>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="mt-6 space-y-5">
             <section className="rounded-3xl bg-white p-6 shadow-lg sm:p-8">
