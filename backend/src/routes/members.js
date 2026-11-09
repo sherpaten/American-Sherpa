@@ -882,6 +882,7 @@ router.post(
         },
         {
           $set: {
+            status: 'cancellation_scheduled',
             'subscription.status': 'cancellation_scheduled',
             'subscription.cancellationRequestedAt': requestedAt,
             'subscription.cancellationEffectiveAt': effectiveAt,
