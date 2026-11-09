@@ -106,6 +106,7 @@ router.post('/cancel', requireMember, async (req, res) => {
     const result = await members.updateOne(
       { _id: member._id, 'subscription.status': 'active', 'subscription.cancellationRequestedAt': null },
       { $set: {
+        status: 'cancellation_scheduled',
         'subscription.status': 'cancellation_scheduled',
         'subscription.cancellationRequestedAt': requestedAt,
         'subscription.cancellationEffectiveAt': effectiveAt,
