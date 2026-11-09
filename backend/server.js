@@ -14,6 +14,7 @@ const {
 
 const memberRoutes = require('./src/routes/members');
 const authRoutes = require('./src/routes/auth');
+const memberPortalRoutes = require('./src/routes/memberPortal');
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use(express.json());
 // ========================================
 
 app.use('/api/members', memberRoutes);
+app.use('/api/member-portal', memberPortalRoutes);
 
 // ========================================
 // ADMIN & STAFF AUTHENTICATION
