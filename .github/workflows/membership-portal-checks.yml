@@ -1,0 +1,42 @@
+name: Membership portal checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/customer-membership-portal]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - name: Syntax-check membership backend files
+        run: |
+          node --check server.js
+          node --check src/routes/members.js
+          node --check src/routes/memberPortal.js
+          node --check src/services/membershipEmail.js
+          node --check src/services/membershipReminders.js
