@@ -48,14 +48,17 @@ function PageFallback() {
 function AppContent() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  // Admin and member portal are standalone workspaces, not public-site pages.
+  // Normalize case/trailing slashes so /Admin and /admin behave identically.
+  const normalizedPath = location.pathname.replace(/\/+$/, '').toLowerCase() || '/';
+  const isStandaloneRoute = normalizedPath === '/admin' || normalizedPath === '/membership-portal';
 
   const openBooking = () => setIsBookingOpen(true);
   const closeBooking = () => setIsBookingOpen(false);
 
   return (
-    <div className={isAdminRoute ? '' : 'flex min-h-screen flex-col bg-[#f7f4ec]'}>
-      {!isAdminRoute && (
+    <div className={isStandaloneRoute ? '' : 'flex min-h-screen flex-col bg-[#f7f4ec]'}>
+      {!isStandaloneRoute && (
         <>
           <a className="skip-link" href="#main-content">
             Skip to main content
@@ -64,7 +67,7 @@ function AppContent() {
         </>
       )}
 
-      <main id="main-content" className={isAdminRoute ? '' : 'flex-grow'}>
+      <main id="main-content" className={isStandaloneRoute ? '' : 'flex-grow'}>
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -79,7 +82,7 @@ function AppContent() {
         </Suspense>
       </main>
 
-      {!isAdminRoute && (
+      {!isStandaloneRoute && (
         <>
           <Footer onBookTable={openBooking} />
           <BookingModal isOpen={isBookingOpen} onClose={closeBooking} />
