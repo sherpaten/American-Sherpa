@@ -117,7 +117,7 @@ router.post('/recover-id/request', recoveryRequestLimiter, async (req, res) => {
   const genericMessage = 'If that email belongs to a membership, a verification code has been sent.';
   try {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
       return res.status(400).json({ success: false, message: 'Enter a valid email address.' });
     }
 
@@ -143,7 +143,7 @@ router.post('/recover-id/request', recoveryRequestLimiter, async (req, res) => {
         await sendMembershipEmail({
           to: email,
           subject: 'Your RipTides membership ID verification code',
-          text: `We received a request to recover the membership ID linked to this email address.\\n\\nYour one-time verification code is: ${code}\\n\\nThis code expires in 10 minutes and can only be used once. If you did not request this, you can ignore this email.\\n\\nRipTides Cocktails & Grill`,
+          text: `We received a request to recover the membership ID linked to this email address.\n\nYour one-time verification code is: ${code}\n\nThis code expires in 10 minutes and can only be used once. If you did not request this, you can ignore this email.\n\nRipTides Cocktails & Grill`,
         });
       } catch (emailError) {
         await recovery.deleteOne({ email });
@@ -162,7 +162,7 @@ router.post('/recover-id/verify', recoveryVerifyLimiter, async (req, res) => {
   try {
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
     const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || !/^\\d{6}$/.test(code)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !/^\d{6}$/.test(code)) {
       return res.status(400).json({ success: false, message: 'Enter the registered email and 6-digit verification code.' });
     }
 
@@ -233,7 +233,7 @@ router.post('/cancel', requireMember, async (req, res) => {
       await sendMembershipEmail({
         to: member.email,
         subject: 'Your RipTides membership cancellation is scheduled',
-        text: `Hello ${member.fullName},\\n\\nWe received your cancellation request for membership ${member.membershipId}. Your membership benefits remain active until ${effectiveAt.toLocaleDateString()}. No automatic refund will be issued. If you have questions, reply to this email or contact ${DEFAULT_CONTACT_EMAIL}.\\n\\nRipTides Cocktails & Grill`,
+        text: `Hello ${member.fullName},\n\nWe received your cancellation request for membership ${member.membershipId}. Your membership benefits remain active until ${effectiveAt.toLocaleDateString()}. No automatic refund will be issued. If you have questions, reply to this email or contact ${DEFAULT_CONTACT_EMAIL}.\n\nRipTides Cocktails & Grill`,
       });
     } catch (emailError) {
       console.warn('Member cancellation confirmation email not sent:', emailError.message);
