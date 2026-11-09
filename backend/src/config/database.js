@@ -53,6 +53,14 @@ async function connectDatabase() {
   }
 }
 
+async function closeDatabase() {
+  if (client) {
+    await client.close();
+    client = null;
+    database = null;
+  }
+}
+
 function getDatabase() {
   if (!database) {
     throw new Error('Database has not been connected yet.');
@@ -64,4 +72,5 @@ function getDatabase() {
 module.exports = {
   connectDatabase,
   getDatabase,
+  closeDatabase,
 };
