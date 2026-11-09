@@ -139,9 +139,9 @@ export default function MembershipSignup() {
                 </p>
                 {success.membershipId && <p className="mt-3 text-sm font-bold text-[#5ED7E5]">Reference: {success.membershipId}</p>}
                 {success.accessCode && <div className="mt-4 rounded-xl border border-[#F4B321]/50 bg-[#F4B321]/10 p-4 text-left">
-                  <p className="text-xs font-black uppercase tracking-wide text-[#F4B321]">Your private membership access code</p>
+                  <p className="text-xs font-black uppercase tracking-wide text-[#F4B321]">Your 4-digit membership access code</p>
                   <p className="mt-2 break-all text-2xl font-black tracking-[0.16em] text-white">{success.accessCode}</p>
-                  <p className="mt-2 text-xs leading-5 text-white/75">Save this code now. It is shown only once. Use it with your membership reference to sign in and manage your membership.</p>
+                  <p className="mt-2 text-xs leading-5 text-white/75">Save this 4-digit code now. It is shown only once. Use it with your membership reference to sign in and manage your membership.</p>
                   <button type="button" onClick={() => navigator.clipboard?.writeText(success.accessCode)} className="mt-3 rounded-full border border-white/30 px-4 py-2 text-xs font-bold text-white">Copy access code</button>
                   <a href="/membership-portal" className="ml-3 inline-block text-xs font-bold text-[#5ED7E5] underline">Open member portal</a>
                 </div>}
