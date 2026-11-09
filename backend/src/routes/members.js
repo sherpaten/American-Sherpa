@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const crypto = require('node:crypto');
 const { ObjectId } = require('mongodb');
 
@@ -184,6 +185,9 @@ router.post('/register', async (req, res) => {
       updatedAt: now,
     };
 
+    const accessCode = crypto.randomBytes(6).toString('hex').toUpperCase();
+    member.accessCodeHash = await bcrypt.hash(accessCode, 12);
+
     await members.insertOne(member);
 
     return res.status(201).json({
@@ -196,6 +200,7 @@ router.post('/register', async (req, res) => {
         plan: member.plan,
         status: member.status,
         paymentStatus: member.paymentStatus,
+        accessCode,
       },
     });
   } catch (error) {
