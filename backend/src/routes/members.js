@@ -850,6 +850,8 @@ router.post(
             'subscription.cancellationRequestedAt': requestedAt,
             'subscription.cancellationEffectiveAt': effectiveAt,
             'subscription.automaticBillingEnabled': false,
+            'subscription.reminderSuppressedAt': requestedAt,
+            'subscription.cancellationRequestedBy': 'admin',
             updatedAt: requestedAt,
           },
         }
