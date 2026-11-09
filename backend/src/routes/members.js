@@ -411,7 +411,7 @@ router.post(
       if (!isValidObjectId(req.params.memberId)) {
         return res.status(400).json({ success: false, message: 'Invalid member ID.' });
       }
-      const accessCode = crypto.randomBytes(6).toString('hex').toUpperCase();
+      const accessCode = String(crypto.randomInt(0, 10000)).padStart(4, '0');
       const accessCodeHash = await bcrypt.hash(accessCode, 12);
       const result = await getDatabase().collection('members').updateOne(
         { _id: new ObjectId(req.params.memberId) },
