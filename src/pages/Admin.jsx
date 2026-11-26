@@ -189,6 +189,39 @@ function StaffDialog({ token, onClose }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [staff, setStaff] = useState([]);
+  const [loadingStaff, setLoadingStaff] = useState(true);
+
+  const loadStaff = useCallback(async () => {
+    setLoadingStaff(true);
+    try {
+      const data = await apiRequest('/api/auth/staff', { token });
+      setStaff(data.staff || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingStaff(false);
+    }
+  }, [token]);
+
+  useEffect(() => { loadStaff(); }, [loadStaff]);
+
+  async function toggleStaff(item) {
+    setError('');
+    setSuccess('');
+    try {
+      const nextActive = !item.isActive;
+      const data = await apiRequest('/api/auth/staff/' + item.id + '/status', {
+        token,
+        method: 'PATCH',
+        body: JSON.stringify({ isActive: nextActive }),
+      });
+      setSuccess(data.message);
+      await loadStaff();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   async function submit(event) {
     event.preventDefault();
@@ -199,6 +232,7 @@ function StaffDialog({ token, onClose }) {
       await apiRequest('/api/auth/staff', { token, method: 'POST', body: JSON.stringify({ name, email, password }) });
       setSuccess('Staff account created successfully.');
       setName(''); setEmail(''); setPassword('');
+      await loadStaff();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -218,6 +252,12 @@ function StaffDialog({ token, onClose }) {
           {error && <p className="admin-alert">{error}</p>}{success && <p className="admin-success">{success}</p>}
           <button className="admin-primary-button" disabled={busy}>{busy ? 'Creating…' : 'Create staff account'} <Icon name="arrow" /></button>
         </form>
+        <div className="admin-section-title"><div><h3>Selected staff accounts</h3><p className="admin-muted">Only active accounts can sign in to the membership verification tool.</p></div></div>
+        {loadingStaff ? <p className="admin-muted">Loading staff accounts…</p> : staff.length ? (
+          <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Staff member</th><th>Status</th><th>Last login</th><th /></tr></thead><tbody>
+            {staff.map((item) => <tr key={item.id}><td><strong>{item.name}</strong><span>{item.email}</span></td><td><StatusPill value={item.isActive ? 'active' : 'suspended'} /></td><td>{formatDate(item.lastLoginAt)}</td><td><button className="admin-small-button" onClick={() => toggleStaff(item)}>{item.isActive ? 'Disable' : 'Enable'}</button></td></tr>)}
+          </tbody></table></div>
+        ) : <p className="admin-empty-inline">No staff accounts have been created.</p>}
       </section>
     </div>
   ), document.body);
