@@ -12,6 +12,7 @@ const { addCalendarMonth } = require('../utils/dates');
 const {
   authenticateToken,
   requireRole,
+  requireStaffPermission,
 } = require('../middleware/auth');
 
 const router = express.Router();
@@ -301,6 +302,7 @@ router.get(
   '/verify/:membershipId',
   authenticateToken,
   requireRole('admin', 'staff'),
+  requireStaffPermission('membership:verify'),
   async (req, res) => {
     try {
       const database = getDatabase();
