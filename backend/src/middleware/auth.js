@@ -58,6 +58,7 @@ async function authenticateToken(req, res, next) {
       email: user.email,
       role: user.role,
       jobTitle: user.jobTitle || null,
+      permissions: Array.isArray(user.permissions) ? user.permissions : [],
     };
 
     next();
@@ -88,6 +89,21 @@ function requireAdminTitle(...allowedTitles) {
   };
 }
 
+function requireStaffPermission(permission) {
+  return (req, res, next) => {
+    if (
+      req.user?.role === 'staff' &&
+      !req.user.permissions?.includes(permission)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'This staff account is not selected for membership verification.',
+      });
+    }
+    next();
+  };
+}
+
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
@@ -105,4 +121,5 @@ module.exports = {
   authenticateToken,
   requireRole,
   requireAdminTitle,
+  requireStaffPermission,
 };
