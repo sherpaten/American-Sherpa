@@ -222,13 +222,13 @@ router.post('/register', async (req, res) => {
 });
 
 // ========================================
-// MEMBER LIST - ADMIN AND STAFF
+// MEMBER LIST - ADMIN ONLY
 // ========================================
 
 router.get(
   '/',
   authenticateToken,
-  requireRole('admin', 'staff'),
+  requireRole('admin'),
   async (req, res) => {
     try {
       const database = getDatabase();
@@ -330,6 +330,27 @@ router.get(
         (member.subscription?.status === 'active' || cancellationStillValid) &&
         (currentPeriodStillValid || cancellationStillValid);
 
+      if (req.user.role === 'staff') {
+        const benefitType = member.plan?.benefitType || null;
+        const configuredRate = Number(member.plan?.benefitDetails?.discountRate);
+        const hasConfiguredRate = Number.isFinite(configuredRate) && configuredRate > 0;
+        const discountStatus = !isActive ? 'inactive' : benefitType !== 'discounted_menu' ? 'not_included' : hasConfiguredRate ? 'eligible' : 'pending_configuration';
+        return res.json({
+          success: true,
+          member: {
+            membershipId: member.membershipId,
+            fullName: member.fullName,
+            planName: member.plan?.name || 'Membership',
+            status: isActive ? 'active' : member.status,
+            isActive: Boolean(isActive),
+            discountEligible: discountStatus === 'eligible',
+            discountStatus,
+            discountRate: hasConfiguredRate ? configuredRate : null,
+            eligibleItems: hasConfiguredRate ? member.plan?.benefitDetails?.eligibleItems || null : null,
+          },
+        });
+      }
+
       return res.json({
         success: true,
         member: {
@@ -354,13 +375,13 @@ router.get(
 );
 
 // ========================================
-// MEMBER DETAILS - ADMIN AND STAFF
+// MEMBER DETAILS - ADMIN ONLY
 // ========================================
 
 router.get(
   '/:memberId',
   authenticateToken,
-  requireRole('admin', 'staff'),
+  requireRole('admin'),
   async (req, res) => {
     try {
       if (!isValidObjectId(req.params.memberId)) {
@@ -433,13 +454,13 @@ router.post(
 );
 
 // ========================================
-// RECORD PAYMENT - STAFF CASH / ADMIN CASH OR ONLINE
+// RECORD PAYMENT - ADMIN ONLY
 // ========================================
 
 router.post(
   '/:memberId/payments',
   authenticateToken,
-  requireRole('admin', 'staff'),
+  requireRole('admin'),
   async (req, res) => {
     try {
       if (!isValidObjectId(req.params.memberId)) {
@@ -455,13 +476,6 @@ router.post(
         return res.status(400).json({
           success: false,
           message: 'Payment method must be cash or online.',
-        });
-      }
-
-      if (req.user.role === 'staff' && method !== 'cash') {
-        return res.status(403).json({
-          success: false,
-          message: 'Staff can only record cash payments.',
         });
       }
 
