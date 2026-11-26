@@ -333,8 +333,15 @@ router.get(
       if (req.user.role === 'staff') {
         const benefitType = member.plan?.benefitType || null;
         const configuredRate = Number(member.plan?.benefitDetails?.discountRate);
-        const hasConfiguredRate = Number.isFinite(configuredRate) && configuredRate > 0;
-        const discountStatus = !isActive ? 'inactive' : benefitType !== 'discounted_menu' ? 'not_included' : hasConfiguredRate ? 'eligible' : 'pending_configuration';
+        const eligibleItems = Array.isArray(member.plan?.benefitDetails?.eligibleItems)
+          ? member.plan.benefitDetails.eligibleItems.filter((item) => typeof item === 'string' && item.trim())
+          : [];
+        // Management must configure both the rate and the eligible items before staff can approve a discount.
+        const hasConfiguredDiscount =
+          Number.isFinite(configuredRate) &&
+          configuredRate > 0 &&
+          eligibleItems.length > 0;
+        const discountStatus = !isActive ? 'inactive' : benefitType !== 'discounted_menu' ? 'not_included' : hasConfiguredDiscount ? 'eligible' : 'pending_configuration';
         return res.json({
           success: true,
           member: {
@@ -345,8 +352,8 @@ router.get(
             isActive: Boolean(isActive),
             discountEligible: discountStatus === 'eligible',
             discountStatus,
-            discountRate: hasConfiguredRate ? configuredRate : null,
-            eligibleItems: hasConfiguredRate ? member.plan?.benefitDetails?.eligibleItems || null : null,
+            discountRate: hasConfiguredDiscount ? configuredRate : null,
+            eligibleItems: hasConfiguredDiscount ? eligibleItems : null,
           },
         });
       }
