@@ -57,6 +57,7 @@ async function authenticateToken(req, res, next) {
       name: user.name,
       email: user.email,
       role: user.role,
+      jobTitle: user.jobTitle || null,
     };
 
     next();
@@ -78,6 +79,15 @@ async function authenticateToken(req, res, next) {
   }
 }
 
+function requireAdminTitle(...allowedTitles) {
+  return (req, res, next) => {
+    if (req.user?.role !== 'admin' || !allowedTitles.includes(req.user.jobTitle)) {
+      return res.status(403).json({ success: false, message: 'Only the Owner or a General Manager can manage staff accounts.' });
+    }
+    next();
+  };
+}
+
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
@@ -94,4 +104,5 @@ function requireRole(...allowedRoles) {
 module.exports = {
   authenticateToken,
   requireRole,
+  requireAdminTitle,
 };
