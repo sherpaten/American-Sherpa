@@ -84,6 +84,17 @@ router.post('/login', loginLimiter, async (req, res) => {
       });
     }
 
+    if (
+      user.role === 'staff' &&
+      !Array.isArray(user.permissions) ||
+      (user.role === 'staff' && !user.permissions.includes('membership:verify'))
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'This staff account is not selected for membership verification.',
+      });
+    }
+
     const token = createAccessToken(user);
 
     await users.updateOne(
