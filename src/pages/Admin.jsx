@@ -320,6 +320,7 @@ function StaffLookup({ token, user, onLogout }) {
               <div className="admin-section-title"><div><h2>{member.fullName}</h2><p className="admin-muted">{member.membershipId}</p></div><StatusPill value={member.status} /></div>
               <div className="admin-detail-grid"><div><span>Membership plan</span><strong>{member.planName}</strong></div><div><span>Membership status</span><strong>{member.isActive ? 'Active' : 'Not active'}</strong></div></div>
               <div className={member.discountEligible ? 'admin-success' : 'admin-alert'}><strong>{member.discountEligible ? 'Discount eligible' : 'Discount not approved for use'}</strong><p>{discountMessage}</p></div>
+              {member.discountEligible && Array.isArray(member.eligibleItems) && <p className="admin-muted"><strong>Eligible items:</strong> {member.eligibleItems.join(', ')}</p>}
               <p className="admin-permission-note">This staff view does not show member contact details, payment history, or account controls. Apply any approved discount manually in Toast.</p>
             </div>}
           </section>
