@@ -35,7 +35,7 @@ async function sendUpcomingPaymentReminders() {
       console.info('Membership payment reminder sent:', member.membershipId, reminderKey);
     }
   } catch (error) {
-    if (/RESEND_API_KEY|MEMBERSHIP_EMAIL_FROM|not configured/i.test(error.message)) {
+    if (/BREVO_API_KEY|RESEND_API_KEY|MEMBERSHIP_EMAIL_FROM|not configured/i.test(error.message)) {
       console.info('Membership payment reminders are waiting for email provider configuration.');
     } else {
       console.error('Membership reminder job failed:', error);
