@@ -9,6 +9,7 @@ const { createAccessToken } = require('../utils/tokens');
 const {
   authenticateToken,
   requireRole,
+  requireAdminTitle,
 } = require('../middleware/auth');
 
 const router = express.Router();
@@ -102,6 +103,7 @@ router.post('/login', loginLimiter, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        jobTitle: user.jobTitle || null,
       },
     });
 
@@ -133,7 +135,7 @@ router.get('/me', authenticateToken, (req, res) => {
 router.post(
   '/staff',
   authenticateToken,
-  requireRole('admin'),
+  requireAdminTitle('Owner', 'General Manager'),
   async (req, res) => {
     try {
       const { name, email, password } = req.body || {};
@@ -196,6 +198,8 @@ router.post(
         email: normalizedEmail,
         passwordHash,
         role: 'staff',
+        jobTitle: 'Selected Staff',
+        permissions: ['membership:verify'],
         isActive: true,
         createdBy: req.user.id,
         createdAt: new Date(),
@@ -212,6 +216,8 @@ router.post(
           name: newStaff.name,
           email: newStaff.email,
           role: newStaff.role,
+          jobTitle: newStaff.jobTitle,
+          permissions: newStaff.permissions,
           isActive: newStaff.isActive,
         },
       });
