@@ -333,12 +333,16 @@ router.get(
         (currentPeriodStillValid || cancellationStillValid);
 
       if (req.user.role === 'staff') {
-        const benefitType = member.plan?.benefitType || null;
-        const configuredRate = Number(member.plan?.benefitDetails?.discountRate);
-        const eligibleItems = Array.isArray(member.plan?.benefitDetails?.eligibleItems)
-          ? member.plan.benefitDetails.eligibleItems.filter((item) => typeof item === 'string' && item.trim())
+        // Use the current plan configuration so existing memberships receive confirmed policy updates.
+        const currentPlan = getMembershipPlan(member.plan?.id);
+        const benefitType = currentPlan?.benefitType || member.plan?.benefitType || null;
+        const configuredRate = Number(
+          currentPlan?.benefitDetails?.discountRate ?? member.plan?.benefitDetails?.discountRate
+        );
+        const configuredItems = currentPlan?.benefitDetails?.eligibleItems ?? member.plan?.benefitDetails?.eligibleItems;
+        const eligibleItems = Array.isArray(configuredItems)
+          ? configuredItems.filter((item) => typeof item === 'string' && item.trim())
           : [];
-        // Management must configure both the rate and the eligible items before staff can approve a discount.
         const hasConfiguredDiscount =
           Number.isFinite(configuredRate) &&
           configuredRate > 0 &&
