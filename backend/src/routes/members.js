@@ -12,6 +12,7 @@ const { addCalendarMonth } = require('../utils/dates');
 const {
   authenticateToken,
   requireRole,
+  requireStaffPermission,
 } = require('../middleware/auth');
 
 const router = express.Router();
@@ -222,13 +223,13 @@ router.post('/register', async (req, res) => {
 });
 
 // ========================================
-// MEMBER LIST - ADMIN AND STAFF
+// MEMBER LIST - ADMIN ONLY
 // ========================================
 
 router.get(
   '/',
   authenticateToken,
-  requireRole('admin', 'staff'),
+  requireRole('admin'),
   async (req, res) => {
     try {
       const database = getDatabase();
@@ -301,6 +302,7 @@ router.get(
   '/verify/:membershipId',
   authenticateToken,
   requireRole('admin', 'staff'),
+  requireStaffPermission('membership:verify'),
   async (req, res) => {
     try {
       const database = getDatabase();
@@ -330,6 +332,38 @@ router.get(
         (member.subscription?.status === 'active' || cancellationStillValid) &&
         (currentPeriodStillValid || cancellationStillValid);
 
+      if (req.user.role === 'staff') {
+        // Use the current plan configuration so existing memberships receive confirmed policy updates.
+        const currentPlan = getMembershipPlan(member.plan?.id);
+        const benefitType = currentPlan?.benefitType || member.plan?.benefitType || null;
+        const configuredRate = Number(
+          currentPlan?.benefitDetails?.discountRate ?? member.plan?.benefitDetails?.discountRate
+        );
+        const configuredItems = currentPlan?.benefitDetails?.eligibleItems ?? member.plan?.benefitDetails?.eligibleItems;
+        const eligibleItems = Array.isArray(configuredItems)
+          ? configuredItems.filter((item) => typeof item === 'string' && item.trim())
+          : [];
+        const hasConfiguredDiscount =
+          Number.isFinite(configuredRate) &&
+          configuredRate > 0 &&
+          eligibleItems.length > 0;
+        const discountStatus = !isActive ? 'inactive' : benefitType !== 'discounted_menu' ? 'not_included' : hasConfiguredDiscount ? 'eligible' : 'pending_configuration';
+        return res.json({
+          success: true,
+          member: {
+            membershipId: member.membershipId,
+            fullName: member.fullName,
+            planName: member.plan?.name || 'Membership',
+            status: isActive ? 'active' : member.status,
+            isActive: Boolean(isActive),
+            discountEligible: discountStatus === 'eligible',
+            discountStatus,
+            discountRate: hasConfiguredDiscount ? configuredRate : null,
+            eligibleItems: hasConfiguredDiscount ? eligibleItems : null,
+          },
+        });
+      }
+
       return res.json({
         success: true,
         member: {
@@ -354,13 +388,13 @@ router.get(
 );
 
 // ========================================
-// MEMBER DETAILS - ADMIN AND STAFF
+// MEMBER DETAILS - ADMIN ONLY
 // ========================================
 
 router.get(
   '/:memberId',
   authenticateToken,
-  requireRole('admin', 'staff'),
+  requireRole('admin'),
   async (req, res) => {
     try {
       if (!isValidObjectId(req.params.memberId)) {
@@ -433,13 +467,13 @@ router.post(
 );
 
 // ========================================
-// RECORD PAYMENT - STAFF CASH / ADMIN CASH OR ONLINE
+// RECORD PAYMENT - ADMIN ONLY
 // ========================================
 
 router.post(
   '/:memberId/payments',
   authenticateToken,
-  requireRole('admin', 'staff'),
+  requireRole('admin'),
   async (req, res) => {
     try {
       if (!isValidObjectId(req.params.memberId)) {
@@ -455,13 +489,6 @@ router.post(
         return res.status(400).json({
           success: false,
           message: 'Payment method must be cash or online.',
-        });
-      }
-
-      if (req.user.role === 'staff' && method !== 'cash') {
-        return res.status(403).json({
-          success: false,
-          message: 'Staff can only record cash payments.',
         });
       }
 

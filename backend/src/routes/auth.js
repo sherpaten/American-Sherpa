@@ -1,5 +1,6 @@
 ﻿
 const express = require('express');
+const { ObjectId } = require('mongodb');
 const bcrypt = require('bcryptjs');
 const { rateLimit } = require('express-rate-limit');
 
@@ -8,7 +9,7 @@ const { createAccessToken } = require('../utils/tokens');
 
 const {
   authenticateToken,
-  requireRole,
+  requireAdminTitle,
 } = require('../middleware/auth');
 
 const router = express.Router();
@@ -83,6 +84,16 @@ router.post('/login', loginLimiter, async (req, res) => {
       });
     }
 
+    if (
+      user.role === 'staff' &&
+      (!Array.isArray(user.permissions) || !user.permissions.includes('membership:verify'))
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'This staff account is not selected for membership verification.',
+      });
+    }
+
     const token = createAccessToken(user);
 
     await users.updateOne(
@@ -102,6 +113,7 @@ router.post('/login', loginLimiter, async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        jobTitle: user.jobTitle || null,
       },
     });
 
@@ -127,13 +139,83 @@ router.get('/me', authenticateToken, (req, res) => {
 });
 
 // ========================================
+// LIST STAFF ACCOUNTS - OWNER / GENERAL MANAGER
+// ========================================
+
+router.get(
+  '/staff',
+  authenticateToken,
+  requireAdminTitle('Owner', 'General Manager'),
+  async (req, res) => {
+    try {
+      const staff = await getDatabase().collection('users')
+        .find({ role: 'staff' })
+        .project({ passwordHash: 0 })
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      return res.json({
+        success: true,
+        staff: staff.map((item) => ({
+          id: item._id.toString(),
+          name: item.name,
+          email: item.email,
+          jobTitle: item.jobTitle || 'Selected Staff',
+          isActive: item.isActive === true,
+          createdAt: item.createdAt || null,
+          lastLoginAt: item.lastLoginAt || null,
+        })),
+      });
+    } catch (error) {
+      console.error('Staff list error:', error);
+      return res.status(500).json({ success: false, message: 'Unable to retrieve staff accounts.' });
+    }
+  }
+);
+
+// ========================================
+// ENABLE / DISABLE STAFF ACCOUNT - OWNER / GENERAL MANAGER
+// ========================================
+
+router.patch(
+  '/staff/:staffId/status',
+  authenticateToken,
+  requireAdminTitle('Owner', 'General Manager'),
+  async (req, res) => {
+    try {
+      const { isActive } = req.body || {};
+      if (!ObjectId.isValid(req.params.staffId) || typeof isActive !== 'boolean') {
+        return res.status(400).json({ success: false, message: 'A valid staff account and active status are required.' });
+      }
+
+      const result = await getDatabase().collection('users').updateOne(
+        { _id: new ObjectId(req.params.staffId), role: 'staff' },
+        { $set: { isActive, updatedAt: new Date(), statusChangedBy: req.user.id } }
+      );
+
+      if (result.matchedCount !== 1) {
+        return res.status(404).json({ success: false, message: 'Staff account not found.' });
+      }
+
+      return res.json({
+        success: true,
+        message: isActive ? 'Staff account enabled.' : 'Staff account disabled. The user will no longer be able to sign in.',
+      });
+    } catch (error) {
+      console.error('Staff status update error:', error);
+      return res.status(500).json({ success: false, message: 'Unable to update staff account.' });
+    }
+  }
+);
+
+// ========================================
 // ADMIN CREATES STAFF ACCOUNT
 // ========================================
 
 router.post(
   '/staff',
   authenticateToken,
-  requireRole('admin'),
+  requireAdminTitle('Owner', 'General Manager'),
   async (req, res) => {
     try {
       const { name, email, password } = req.body || {};
@@ -196,6 +278,8 @@ router.post(
         email: normalizedEmail,
         passwordHash,
         role: 'staff',
+        jobTitle: 'Selected Staff',
+        permissions: ['membership:verify'],
         isActive: true,
         createdBy: req.user.id,
         createdAt: new Date(),
@@ -212,6 +296,8 @@ router.post(
           name: newStaff.name,
           email: newStaff.email,
           role: newStaff.role,
+          jobTitle: newStaff.jobTitle,
+          permissions: newStaff.permissions,
           isActive: newStaff.isActive,
         },
       });

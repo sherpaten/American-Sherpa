@@ -189,6 +189,39 @@ function StaffDialog({ token, onClose }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [staff, setStaff] = useState([]);
+  const [loadingStaff, setLoadingStaff] = useState(true);
+
+  const loadStaff = useCallback(async () => {
+    setLoadingStaff(true);
+    try {
+      const data = await apiRequest('/api/auth/staff', { token });
+      setStaff(data.staff || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingStaff(false);
+    }
+  }, [token]);
+
+  useEffect(() => { loadStaff(); }, [loadStaff]);
+
+  async function toggleStaff(item) {
+    setError('');
+    setSuccess('');
+    try {
+      const nextActive = !item.isActive;
+      const data = await apiRequest('/api/auth/staff/' + item.id + '/status', {
+        token,
+        method: 'PATCH',
+        body: JSON.stringify({ isActive: nextActive }),
+      });
+      setSuccess(data.message);
+      await loadStaff();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   async function submit(event) {
     event.preventDefault();
@@ -199,6 +232,7 @@ function StaffDialog({ token, onClose }) {
       await apiRequest('/api/auth/staff', { token, method: 'POST', body: JSON.stringify({ name, email, password }) });
       setSuccess('Staff account created successfully.');
       setName(''); setEmail(''); setPassword('');
+      await loadStaff();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -214,13 +248,87 @@ function StaffDialog({ token, onClose }) {
           <label htmlFor="staff-name">Full name</label><input id="staff-name" required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} />
           <label htmlFor="staff-email">Email address</label><input id="staff-email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
           <label htmlFor="staff-password">Temporary password</label><input id="staff-password" type="password" required minLength={12} autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} />
-          <p className="admin-muted">Use at least 12 characters. Share the temporary password securely.</p>
+          <p className="admin-muted">Use at least 12 characters. This account can only verify membership IDs and discount eligibility. Share the temporary password securely.</p>
           {error && <p className="admin-alert">{error}</p>}{success && <p className="admin-success">{success}</p>}
           <button className="admin-primary-button" disabled={busy}>{busy ? 'Creating…' : 'Create staff account'} <Icon name="arrow" /></button>
         </form>
+        <div className="admin-section-title"><div><h3>Selected staff accounts</h3><p className="admin-muted">Only active accounts can sign in to the membership verification tool.</p></div></div>
+        {loadingStaff ? <p className="admin-muted">Loading staff accounts…</p> : staff.length ? (
+          <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Staff member</th><th>Status</th><th>Last login</th><th /></tr></thead><tbody>
+            {staff.map((item) => <tr key={item.id}><td><strong>{item.name}</strong><span>{item.email}</span></td><td><StatusPill value={item.isActive ? 'active' : 'suspended'} /></td><td>{formatDate(item.lastLoginAt)}</td><td><button className="admin-small-button" onClick={() => toggleStaff(item)}>{item.isActive ? 'Disable' : 'Enable'}</button></td></tr>)}
+          </tbody></table></div>
+        ) : <p className="admin-empty-inline">No staff accounts have been created.</p>}
       </section>
     </div>
   ), document.body);
+}
+
+function StaffLookup({ token, user, onLogout }) {
+  const [membershipId, setMembershipId] = useState('');
+  const [member, setMember] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function submit(event) {
+    event.preventDefault();
+    const reference = membershipId.trim().toUpperCase();
+    if (!reference) return;
+    setBusy(true);
+    setError('');
+    setMember(null);
+    try {
+      const data = await apiRequest('/api/members/verify/' + encodeURIComponent(reference), { token });
+      setMember(data.member);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  let discountMessage = '';
+  if (member?.discountStatus === 'eligible') {
+    discountMessage = member.discountRate + '% discount is configured for this membership. Check eligible items before applying it in Toast.';
+  } else if (member?.discountStatus === 'pending_configuration') {
+    discountMessage = 'This plan includes a menu-discount benefit, but the discount rate or eligible items have not been finalized. Do not apply a discount until management confirms the terms.';
+  } else if (member?.discountStatus === 'not_included') {
+    discountMessage = 'This membership plan does not include a configured menu discount.';
+  } else if (member) {
+    discountMessage = 'This membership is not currently active. Do not apply a membership discount.';
+  }
+
+  return (
+    <div className="admin-app">
+      <aside className="admin-sidebar">
+        <a className="admin-sidebar-brand" href="/admin"><span className="admin-brand-mark"><Icon name="wave" size={25} /></span><span>RIPTIDES<small>MEMBERSHIP CHECK</small></span></a>
+        <div className="admin-side-label">WORKSPACE</div>
+        <div className="admin-side-link active"><Icon name="shield" /> Discount verification</div>
+        <div className="admin-sidebar-bottom"><div className="admin-user-avatar">{(user.name || 'S').slice(0, 1).toUpperCase()}</div><div className="admin-user-meta"><strong>{user.name}</strong><span>Selected Staff</span></div><button className="admin-icon-button admin-logout" onClick={onLogout} title="Sign out" aria-label="Sign out"><Icon name="logout" /></button></div>
+      </aside>
+      <main className="admin-main">
+        <header className="admin-topbar"><div><span className="admin-breadcrumb">Workspace /</span><strong>Discount verification</strong></div><span className="admin-role-tag"><Icon name="shield" size={14} /> Staff access</span></header>
+        <div className="admin-content">
+          <div className="admin-page-heading"><div><p className="admin-eyebrow">STAFF TOOL</p><h1>Verify a membership</h1><p className="admin-muted">Check whether a membership is active before applying an approved discount in Toast.</p></div></div>
+          <section className="admin-table-card">
+            <form className="admin-form" onSubmit={submit}>
+              <label htmlFor="staff-membership-id">Membership ID</label>
+              <input id="staff-membership-id" value={membershipId} onChange={(event) => setMembershipId(event.target.value)} placeholder="Enter membership ID" autoComplete="off" required />
+              <button className="admin-primary-button" disabled={busy || !membershipId.trim()}>{busy ? 'Checking…' : 'Verify membership'} <Icon name="arrow" /></button>
+            </form>
+            {error && <p className="admin-alert" role="alert">{error}</p>}
+            {member && <div className="admin-staff-result">
+              <div className="admin-section-title"><div><h2>{member.fullName}</h2><p className="admin-muted">{member.membershipId}</p></div><StatusPill value={member.status} /></div>
+              <div className="admin-detail-grid"><div><span>Membership plan</span><strong>{member.planName}</strong></div><div><span>Membership status</span><strong>{member.isActive ? 'Active' : 'Not active'}</strong></div></div>
+              <div className={member.discountEligible ? 'admin-success' : 'admin-alert'}><strong>{member.discountEligible ? 'Discount eligible' : 'Discount not approved for use'}</strong><p>{discountMessage}</p></div>
+              {member.discountEligible && Array.isArray(member.eligibleItems) && <p className="admin-muted"><strong>Eligible items:</strong> {member.eligibleItems.join(', ')}</p>}
+              <p className="admin-permission-note">This staff view does not show member contact details, payment history, or account controls. Apply any approved discount manually in Toast.</p>
+            </div>}
+          </section>
+          <p className="admin-footer-note"><Icon name="shield" size={14} /> Limited access: membership verification only. No payment, renewal, cancellation, or member-record editing permissions.</p>
+        </div>
+      </main>
+    </div>
+  );
 }
 
 function Dashboard({ token, user, onLogout }) {
@@ -234,6 +342,7 @@ function Dashboard({ token, user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const canManageStaff = user.role === 'admin' && ['Owner', 'General Manager'].includes(user.jobTitle);
 
   const loadMembers = useCallback(async (page = 1, quiet = false) => {
     if (quiet) setRefreshing(true); else setLoading(true);
@@ -294,7 +403,7 @@ function Dashboard({ token, user, onLogout }) {
       <main className="admin-main">
         <header className="admin-topbar"><div><span className="admin-breadcrumb">Workspace /</span><strong>Memberships</strong></div><div className="admin-top-actions"><span className="admin-role-tag"><Icon name="shield" size={14} /> {user.role}</span><button className="admin-secondary-button admin-refresh" onClick={() => loadMembers(pagination.page, true)} disabled={refreshing}><Icon name="refresh" size={16} /> {refreshing ? 'Refreshing' : 'Refresh'}</button></div></header>
         <div className="admin-content">
-          <div className="admin-page-heading"><div><p className="admin-eyebrow">OVERVIEW</p><h1>Memberships</h1><p className="admin-muted">Manage member records, payments and access status.</p></div>{user.role === 'admin' && <button className="admin-primary-button admin-add-staff" onClick={() => setShowStaff(true)}><Icon name="plus" /> Add staff</button>}</div>
+          <div className="admin-page-heading"><div><p className="admin-eyebrow">OVERVIEW</p><h1>Memberships</h1><p className="admin-muted">Manage member records, payments and access status.</p></div>{canManageStaff && <button className="admin-primary-button admin-add-staff" onClick={() => setShowStaff(true)}><Icon name="plus" /> Add staff</button>}</div>
           <div className="admin-stats-grid">
             <article className="admin-stat-card"><span>Total members</span><strong>{pagination.total}</strong><small>All matching records</small></article>
             <article className="admin-stat-card"><span>Active on this page</span><strong>{summary.active}</strong><small>Current page</small></article>
@@ -350,5 +459,7 @@ export default function Admin() {
 
   if (checking) return <div className="admin-login-shell"><p className="admin-muted">Verifying your secure session…</p></div>;
   if (!token || !user) return <Login onLogin={login} />;
-  return <Dashboard token={token} user={user} onLogout={logout} />;
+  return user.role === 'staff'
+    ? <StaffLookup token={token} user={user} onLogout={logout} />
+    : <Dashboard token={token} user={user} onLogout={logout} />;
 }
